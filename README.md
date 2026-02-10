@@ -1,1 +1,0 @@
-# vitable-connect-openapi
