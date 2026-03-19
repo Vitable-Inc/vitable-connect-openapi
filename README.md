@@ -10,9 +10,3 @@ It is generated with [Stainless](https://www.stainless.com/).
 > This spec is primarily intended for Vitable Connect's internal use. Stability of the spec is not guaranteed.
 
 [**View the spec**](openapi.yml)
-
-## Clients
-
-Our official clients are generated from this spec:
-
-- [vitable-connect-python](https://github.com/Vitable-Inc/vitable-connect-python) (Python)
