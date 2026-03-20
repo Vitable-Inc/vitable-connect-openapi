@@ -2824,6 +2824,745 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/webhook-events:
+    get:
+      operationId: list_webhook_events
+      description: Retrieves a paginated list of webhook events for the authenticated organization. Supports filtering by event name, resource type, resource ID, and date range.
+      summary: List webhook events
+      parameters:
+      - in: query
+        name: created_after
+        schema:
+          $ref: '#/components/schemas/CreatedAfter'
+      - in: query
+        name: created_before
+        schema:
+          $ref: '#/components/schemas/CreatedBefore'
+      - in: query
+        name: event_name
+        schema:
+          $ref: '#/components/schemas/EventName'
+        description: |-
+          * `enrollment.accepted` - Enrollment Accepted
+          * `enrollment.terminated` - Enrollment Terminated
+          * `enrollment.elected` - Enrollment Elected
+          * `enrollment.granted` - Enrollment Granted
+          * `enrollment.waived` - Enrollment Waived
+          * `enrollment.started` - Enrollment Started
+          * `employee.eligibility_granted` - Employee Eligibility Granted
+          * `employee.eligibility_terminated` - Employee Eligibility Terminated
+          * `employee.deactivated` - Employee Deactivated
+          * `payroll_deduction.created` - Payroll Deduction Created
+          * `plan_year.eligibility_policy_created` - Plan Year Eligibility Policy Created
+      - in: query
+        name: limit
+        schema:
+          $ref: '#/components/schemas/Limit'
+      - in: query
+        name: page
+        schema:
+          $ref: '#/components/schemas/Page'
+      - in: query
+        name: resource_id
+        schema:
+          $ref: '#/components/schemas/ResourceId'
+      - in: query
+        name: resource_type
+        schema:
+          $ref: '#/components/schemas/ResourceType'
+        description: |-
+          * `enrollment` - Enrollment
+          * `employee` - Employee
+          * `employer` - Employer
+          * `dependent` - Dependent
+          * `plan_year` - Plan Year
+          * `payroll_deduction` - Payroll Deduction
+      tags:
+      - Outbound Webhooks
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEventListResponse'
+              examples:
+                WebhookEventsList:
+                  value:
+                    data:
+                    - id: wevt_abc123def456
+                      organization_id: org_xyz789
+                      event_name: enrollment.accepted
+                      resource_type: enrollment
+                      resource_id: enrl_sample123
+                      created_at: '2024-06-15T14:30:00Z'
+                    - id: wevt_def456ghi789
+                      organization_id: org_xyz789
+                      event_name: employee.deactivated
+                      resource_type: employee
+                      resource_id: empl_sample456
+                      created_at: '2024-06-15T12:00:00Z'
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 2
+                      total_pages: 1
+                  summary: Webhook Events List
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/webhook-events/{event_id}:
+    get:
+      operationId: get_webhook_event
+      description: Retrieves a single webhook event by its prefixed ID. Returns 404 if the event does not exist or belongs to a different organization.
+      summary: Get webhook event
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          $ref: '#/components/schemas/EventId'
+        required: true
+      tags:
+      - Outbound Webhooks
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEventResponse'
+              examples:
+                WebhookEventDetail:
+                  value:
+                    data:
+                      id: wevt_abc123def456
+                      organization_id: org_xyz789
+                      event_name: enrollment.accepted
+                      resource_type: enrollment
+                      resource_id: enrl_sample123
+                      created_at: '2024-06-15T14:30:00Z'
+                  summary: Webhook Event Detail
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          description: No response body
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/webhook-events/{event_id}/deliveries:
+    get:
+      operationId: list_webhook_event_deliveries
+      description: Retrieves all delivery attempts for a webhook event. Returns up to 100 deliveries. Each delivery includes a computed status field (Pending, In Progress, Delivered, or Failed).
+      summary: List webhook event deliveries
+      parameters:
+      - in: path
+        name: event_id
+        schema:
+          $ref: '#/components/schemas/EventId'
+        required: true
+      tags:
+      - Outbound Webhooks
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWebhookEventDeliveriesResponse'
+              examples:
+                WebhookEventDeliveriesList:
+                  value:
+                    data:
+                    - id: wdlv_abc123def456
+                      webhook_event_id: wevt_xyz789abc012
+                      subscription_id: wsub_sub123def456
+                      status: Delivered
+                      started_at: '2024-06-15T14:30:01Z'
+                      delivered_at: '2024-06-15T14:30:02Z'
+                      failed_at: null
+                      failure_reason: ''
+                      created_at: '2024-06-15T14:30:00Z'
+                    - id: wdlv_def456ghi789
+                      webhook_event_id: wevt_xyz789abc012
+                      subscription_id: wsub_sub456ghi789
+                      status: Failed
+                      started_at: '2024-06-15T14:30:01Z'
+                      delivered_at: null
+                      failed_at: '2024-06-15T14:30:05Z'
+                      failure_reason: max_attempts
+                      created_at: '2024-06-15T14:30:00Z'
+                  summary: Webhook Event Deliveries List
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          description: No response body
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     AccessTokenResponse:
@@ -3578,6 +4317,15 @@ components:
           description: Optional entity to bind the token to for scoped access
       required:
       - grant_type
+    ListWebhookEventDeliveriesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookDelivery'
+      required:
+      - data
     Pagination:
       type: object
       description: Pagination metadata for list responses.
@@ -3769,6 +4517,103 @@ components:
       description: |-
         * `employer` - employer
         * `employee` - employee
+    WebhookDelivery:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Prefixed unique identifier for this delivery (e.g., `wdlv_...`).
+        webhook_event_id:
+          type: string
+          description: The webhook event this delivery belongs to.
+        subscription_id:
+          type: string
+          description: The webhook subscription this delivery was sent to.
+        status:
+          type: string
+          description: 'Current delivery status: Pending, In Progress, Delivered, or Failed.'
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the delivery attempt started, in UTC.
+        delivered_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the delivery was successfully received, in UTC.
+        failed_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the delivery was marked as permanently failed, in UTC.
+        failure_reason:
+          type: string
+          description: Reason for failure, if applicable.
+        created_at:
+          type: string
+          format: date-time
+          description: When this delivery record was created, in UTC.
+      required:
+      - created_at
+      - delivered_at
+      - failed_at
+      - failure_reason
+      - id
+      - started_at
+      - status
+      - subscription_id
+      - webhook_event_id
+    WebhookEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Prefixed unique identifier for this webhook event (e.g., `wevt_...`).
+        organization_id:
+          type: string
+          description: The organization this event belongs to.
+        event_name:
+          type: string
+          description: The event type, formatted as `{resource}.{action}` (e.g., `enrollment.accepted`).
+        resource_type:
+          type: string
+          description: The type of resource affected (e.g., `enrollment`, `employee`).
+        resource_id:
+          type: string
+          description: Prefixed ID of the affected resource. Use this to fetch the current state from the API.
+        created_at:
+          type: string
+          format: date-time
+          description: When the event occurred, in UTC.
+      required:
+      - created_at
+      - event_name
+      - id
+      - organization_id
+      - resource_id
+      - resource_type
+    WebhookEventListResponse:
+      type: object
+      description: Paginated list response containing webhook event resources.
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEvent'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+      - data
+      - pagination
+    WebhookEventResponse:
+      type: object
+      description: Response containing a single webhook event resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/WebhookEvent'
+      required:
+      - data
     ErrorResponse:
       type: object
       properties:
@@ -3824,6 +4669,61 @@ components:
       type: string
       example: enrl_abc123def456
       description: Unique enrollment identifier (enrl_*)
+    CreatedAfter:
+      type: string
+      format: date-time
+    CreatedBefore:
+      type: string
+      format: date-time
+    EventName:
+      enum:
+      - enrollment.accepted
+      - enrollment.terminated
+      - enrollment.elected
+      - enrollment.granted
+      - enrollment.waived
+      - enrollment.started
+      - employee.eligibility_granted
+      - employee.eligibility_terminated
+      - employee.deactivated
+      - payroll_deduction.created
+      - plan_year.eligibility_policy_created
+      type: string
+      minLength: 1
+      description: |-
+        * `enrollment.accepted` - Enrollment Accepted
+        * `enrollment.terminated` - Enrollment Terminated
+        * `enrollment.elected` - Enrollment Elected
+        * `enrollment.granted` - Enrollment Granted
+        * `enrollment.waived` - Enrollment Waived
+        * `enrollment.started` - Enrollment Started
+        * `employee.eligibility_granted` - Employee Eligibility Granted
+        * `employee.eligibility_terminated` - Employee Eligibility Terminated
+        * `employee.deactivated` - Employee Deactivated
+        * `payroll_deduction.created` - Payroll Deduction Created
+        * `plan_year.eligibility_policy_created` - Plan Year Eligibility Policy Created
+    ResourceId:
+      type: string
+      minLength: 1
+    ResourceType:
+      enum:
+      - enrollment
+      - employee
+      - employer
+      - dependent
+      - plan_year
+      - payroll_deduction
+      type: string
+      minLength: 1
+      description: |-
+        * `enrollment` - Enrollment
+        * `employee` - Employee
+        * `employer` - Employer
+        * `dependent` - Dependent
+        * `plan_year` - Plan Year
+        * `payroll_deduction` - Payroll Deduction
+    EventId:
+      type: string
   securitySchemes:
     APIKeyAuth:
       type: http
