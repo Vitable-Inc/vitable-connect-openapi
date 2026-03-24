@@ -1308,12 +1308,14 @@ paths:
                   legal_name: NewCo Industries LLC
                   ein: 12-3456789
                   email: hr@newco.com
+                  phone_number: '2065550100'
                   address:
                     address_line_1: 789 Business Blvd
                     address_line_2: Floor 5
                     city: Seattle
                     state: WA
                     zipcode: '98101'
+                  reference_id: partner-emp-001
                 summary: Create Employer Request
         required: true
       security:
@@ -2853,7 +2855,7 @@ paths:
           * `employee.eligibility_terminated` - Employee Eligibility Terminated
           * `employee.deactivated` - Employee Deactivated
           * `payroll_deduction.created` - Payroll Deduction Created
-          * `plan_year.eligibility_policy_created` - Plan Year Eligibility Policy Created
+          * `employer.eligibility_policy_created` - Employer Eligibility Policy Created
       - in: query
         name: limit
         schema:
@@ -3858,6 +3860,15 @@ components:
           allOf:
           - $ref: '#/components/schemas/EmployerAddressInput'
           description: Employer address
+        phone_number:
+          type: string
+          nullable: true
+          description: Employer phone number (10-digit US format, e.g. 5551234567)
+        reference_id:
+          type: string
+          nullable: true
+          description: External reference ID for this employer
+          maxLength: 255
       required:
       - address
       - ein
@@ -4687,7 +4698,7 @@ components:
       - employee.eligibility_terminated
       - employee.deactivated
       - payroll_deduction.created
-      - plan_year.eligibility_policy_created
+      - employer.eligibility_policy_created
       type: string
       minLength: 1
       description: |-
@@ -4701,7 +4712,7 @@ components:
         * `employee.eligibility_terminated` - Employee Eligibility Terminated
         * `employee.deactivated` - Employee Deactivated
         * `payroll_deduction.created` - Payroll Deduction Created
-        * `plan_year.eligibility_policy_created` - Plan Year Eligibility Policy Created
+        * `employer.eligibility_policy_created` - Employer Eligibility Policy Created
     ResourceId:
       type: string
       minLength: 1
