@@ -15,4 +15,5 @@ It is generated with [Stainless](https://www.stainless.com/).
 
 Our official clients are generated from this spec:
 
+- [vitable-connect-typescript](https://github.com/Vitable-Inc/vitable-connect-typescript) (TypeScript)
 - [vitable-connect-python](https://github.com/Vitable-Inc/vitable-connect-python) (Python)
