@@ -17,3 +17,4 @@ Our official clients are generated from this spec:
 
 - [vitable-connect-typescript](https://github.com/Vitable-Inc/vitable-connect-typescript) (TypeScript)
 - [vitable-connect-python](https://github.com/Vitable-Inc/vitable-connect-python) (Python)
+- [vitable-connect-ruby](https://github.com/Vitable-Inc/vitable-connect-ruby) (Ruby)
