@@ -491,7 +491,7 @@ paths:
   /v1/employees/{employee_id}:
     get:
       operationId: get_employee
-      description: Retrieves detailed information for a specific employee by ID. Returns employee details including personal information and employment status.
+      description: Retrieves detailed information for a specific employee by ID. Returns employee details including personal information, employment status, and payroll deductions from the most recent statement period. Deductions reflect a snapshot of the current period and are replaced when a new statement is generated.
       summary: Get employee
       parameters:
       - in: path
@@ -538,6 +538,14 @@ paths:
                       - id: enrl_abc123
                         status: enrolled
                         answered_at: '2023-01-20T10:00:00Z'
+                      deductions:
+                      - deduction_category: null
+                        deduction_amount_in_cents: 5000
+                        tax_classification: pre_tax
+                        frequency: monthly
+                        benefit_name: Gold PPO Plan
+                        period_start_date: '2025-01-01'
+                        period_end_date: '2025-01-31'
                       created_at: '2023-01-15T09:00:00Z'
                       updated_at: '2024-06-01T14:30:00Z'
                   summary: Employee Detail
@@ -2305,7 +2313,7 @@ paths:
   /v1/employers/{employer_id}/employees:
     get:
       operationId: list_employees
-      description: Retrieves a paginated list of all employees for a specific employer. Results are paginated using page and limit parameters.
+      description: Retrieves a paginated list of all employees for a specific employer. Results are paginated using page and limit parameters. Each employee includes payroll deductions from the most recent statement period. When a new deduction statement is generated, previous period deductions are replaced.
       summary: List employees
       parameters:
       - in: path
@@ -2362,6 +2370,14 @@ paths:
                       - id: enrl_abc123
                         status: enrolled
                         answered_at: '2023-01-20T10:00:00Z'
+                      deductions:
+                      - deduction_category: null
+                        deduction_amount_in_cents: 5000
+                        tax_classification: Pre-tax
+                        frequency: monthly
+                        benefit_name: Gold PPO Plan
+                        period_start_date: '2025-01-01'
+                        period_end_date: '2025-01-31'
                       created_at: '2023-01-15T09:00:00Z'
                       updated_at: '2024-06-01T14:30:00Z'
                     pagination:
@@ -2854,8 +2870,8 @@ paths:
           * `employee.eligibility_granted` - Employee Eligibility Granted
           * `employee.eligibility_terminated` - Employee Eligibility Terminated
           * `employee.deactivated` - Employee Deactivated
-          * `payroll_deduction.created` - Payroll Deduction Created
           * `employer.eligibility_policy_created` - Employer Eligibility Policy Created
+          * `employee.deduction_created` - Employee Deduction Created
       - in: query
         name: limit
         schema:
@@ -3875,6 +3891,51 @@ components:
       - email
       - legal_name
       - name
+    DeductionDetail:
+      type: object
+      properties:
+        deduction_category:
+          type: string
+          nullable: true
+          description: Deduction category (reserved for future use)
+        deduction_amount_in_cents:
+          type: integer
+          description: Employee deduction amount in cents
+        tax_classification:
+          allOf:
+          - $ref: '#/components/schemas/TaxClassification'
+          description: |-
+            Tax classification: Pre-tax, Post-tax, or Unknown
+
+            * `Unknown` - Unknown
+            * `Pre-tax` - Pre Tax
+            * `Post-tax` - Post Tax
+        frequency:
+          allOf:
+          - $ref: '#/components/schemas/Frequency'
+          description: |-
+            Deduction frequency
+
+            * `monthly` - Monthly
+        benefit_name:
+          type: string
+          description: Name of the benefit plan
+        period_start_date:
+          type: string
+          format: date
+          description: Period start date (YYYY-MM-DD)
+        period_end_date:
+          type: string
+          format: date
+          description: Period end date (YYYY-MM-DD)
+      required:
+      - benefit_name
+      - deduction_amount_in_cents
+      - deduction_category
+      - frequency
+      - period_end_date
+      - period_start_date
+      - tax_classification
     Employee:
       type: object
       properties:
@@ -3953,6 +4014,11 @@ components:
           items:
             $ref: '#/components/schemas/EnrollmentSummary'
           description: Benefit enrollments for this employee
+        deductions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeductionDetail'
+          description: Payroll deductions from the most recent statement period. Replaced when a new statement is generated.
         created_at:
           type: string
           format: date-time
@@ -3964,6 +4030,7 @@ components:
       required:
       - created_at
       - date_of_birth
+      - deductions
       - email
       - enrollments
       - first_name
@@ -4306,6 +4373,11 @@ components:
       required:
       - id
       - status
+    Frequency:
+      enum:
+      - monthly
+      type: string
+      description: '* `monthly` - Monthly'
     GrantType:
       enum:
       - client_credentials
@@ -4520,6 +4592,16 @@ components:
         * `AE` - AE
         * `AA` - AA
         * `AP` - AP
+    TaxClassification:
+      enum:
+      - Unknown
+      - Pre-tax
+      - Post-tax
+      type: string
+      description: |-
+        * `Unknown` - Unknown
+        * `Pre-tax` - Pre Tax
+        * `Post-tax` - Post Tax
     Type:
       enum:
       - employer
@@ -4697,8 +4779,8 @@ components:
       - employee.eligibility_granted
       - employee.eligibility_terminated
       - employee.deactivated
-      - payroll_deduction.created
       - employer.eligibility_policy_created
+      - employee.deduction_created
       type: string
       minLength: 1
       description: |-
@@ -4711,8 +4793,8 @@ components:
         * `employee.eligibility_granted` - Employee Eligibility Granted
         * `employee.eligibility_terminated` - Employee Eligibility Terminated
         * `employee.deactivated` - Employee Deactivated
-        * `payroll_deduction.created` - Payroll Deduction Created
         * `employer.eligibility_policy_created` - Employer Eligibility Policy Created
+        * `employee.deduction_created` - Employee Deduction Created
     ResourceId:
       type: string
       minLength: 1
