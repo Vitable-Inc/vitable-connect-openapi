@@ -3916,6 +3916,9 @@ components:
           description: |-
             Deduction frequency
 
+            * `weekly` - Weekly
+            * `bi_weekly` - Bi Weekly
+            * `semi_monthly` - Semi Monthly
             * `monthly` - Monthly
         benefit_name:
           type: string
@@ -4375,9 +4378,16 @@ components:
       - status
     Frequency:
       enum:
+      - weekly
+      - bi_weekly
+      - semi_monthly
       - monthly
       type: string
-      description: '* `monthly` - Monthly'
+      description: |-
+        * `weekly` - Weekly
+        * `bi_weekly` - Bi Weekly
+        * `semi_monthly` - Semi Monthly
+        * `monthly` - Monthly
     GrantType:
       enum:
       - client_credentials
