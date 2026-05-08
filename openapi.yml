@@ -534,10 +534,6 @@ paths:
                         city: San Francisco
                         state: CA
                         zipcode: '94102'
-                      enrollments:
-                      - id: enrl_abc123
-                        status: enrolled
-                        answered_at: '2023-01-20T10:00:00Z'
                       deductions:
                       - deduction_category: null
                         deduction_amount_in_cents: 5000
@@ -2366,10 +2362,6 @@ paths:
                         city: San Francisco
                         state: CA
                         zipcode: '94102'
-                      enrollments:
-                      - id: enrl_abc123
-                        status: enrolled
-                        answered_at: '2023-01-20T10:00:00Z'
                       deductions:
                       - deduction_category: null
                         deduction_amount_in_cents: 5000
@@ -4257,11 +4249,6 @@ components:
           - $ref: '#/components/schemas/EmployeeAddress'
           nullable: true
           description: Employee's residential address
-        enrollments:
-          type: array
-          items:
-            $ref: '#/components/schemas/EnrollmentSummary'
-          description: Benefit enrollments for this employee
         deductions:
           type: array
           items:
@@ -4280,7 +4267,6 @@ components:
       - date_of_birth
       - deductions
       - email
-      - enrollments
       - first_name
       - id
       - last_name
@@ -4632,31 +4618,6 @@ components:
         * `enrolled` - Enrolled
         * `waived` - Waived
         * `inactive` - Inactive
-    EnrollmentSummary:
-      type: object
-      properties:
-        id:
-          type: string
-          readOnly: true
-          description: Unique enrollment identifier with 'enrl_' prefix
-        status:
-          allOf:
-          - $ref: '#/components/schemas/EnrollmentStatus'
-          description: |-
-            Enrollment status
-
-            * `pending` - Pending
-            * `enrolled` - Enrolled
-            * `waived` - Waived
-            * `inactive` - Inactive
-        answered_at:
-          type: string
-          format: date-time
-          nullable: true
-          description: Timestamp when the enrollment decision was made
-      required:
-      - id
-      - status
     Frequency:
       enum:
       - weekly
