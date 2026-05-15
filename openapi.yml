@@ -6372,7 +6372,8 @@ components:
           type: string
         plan_id:
           type: string
-          format: uuid
+          maxLength: 255
+          minLength: 1
         address:
           $ref: '#/components/schemas/AddressRequest'
         email:
