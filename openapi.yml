@@ -4046,6 +4046,407 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/groups/{group_id}/members/sync:
+    post:
+      operationId: submit_group_member_sync
+      description: Submits a member sync payload for the specified group. Members in the payload will be queued for processing asynchronously. Returns HTTP 202 with the batch ID and acceptance timestamp.
+      summary: Submit group member sync
+      parameters:
+      - in: path
+        name: group_id
+        schema:
+          $ref: '#/components/schemas/GroupId'
+        required: true
+      tags:
+      - Groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupMemberSyncRequest'
+        required: true
+      security:
+      - APIKeyAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberSyncDetailResponse'
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberSyncBadRequestResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberSyncNotFoundResponse'
+          description: ''
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/groups/{group_id}/members/sync/{request_id}:
+    get:
+      operationId: get_group_member_sync_request
+      description: Retrieves a previously-submitted group member sync request by its `grpmsr_` ID. Returns the acceptance timestamp, completion timestamp (if processing has finished), and the per-member `results` once available. While processing is in flight, `completed_at` and `results` are `null`.
+      summary: Get group member sync request
+      parameters:
+      - in: path
+        name: group_id
+        schema:
+          $ref: '#/components/schemas/GroupId'
+        required: true
+      - in: path
+        name: request_id
+        schema:
+          $ref: '#/components/schemas/RequestId'
+        required: true
+      tags:
+      - Groups
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberSyncRequestDetailResponse'
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberSyncRequestDetailBadRequestResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupMemberSyncRequestDetailNotFoundResponse'
+          description: ''
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/plans:
     get:
       operationId: list_plans
@@ -5052,6 +5453,34 @@ components:
       - access_token
       - expires_in
       - token_type
+    AddressRequest:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          maxLength: 255
+          minLength: 1
+        address_line_2:
+          type: string
+          nullable: true
+          maxLength: 255
+        city:
+          type: string
+          maxLength: 255
+          minLength: 1
+        state:
+          type: string
+          maxLength: 2
+          minLength: 2
+        zipcode:
+          type: string
+          maxLength: 20
+          minLength: 1
+      required:
+      - address_line_1
+      - city
+      - state
+      - zipcode
     BenefitEligibilityPolicy:
       type: object
       properties:
@@ -5348,9 +5777,10 @@ components:
           minLength: 1
         external_reference_id:
           type: string
-          nullable: true
           maxLength: 255
+          minLength: 1
       required:
+      - external_reference_id
       - name
     DeductionDetail:
       type: object
@@ -5870,7 +6300,6 @@ components:
           type: string
         external_reference_id:
           type: string
-          nullable: true
         created_at:
           type: string
           format: date-time
@@ -5881,6 +6310,7 @@ components:
           nullable: true
       required:
       - created_at
+      - external_reference_id
       - id
       - name
       - organization_id
@@ -5898,6 +6328,166 @@ components:
       required:
       - data
       - pagination
+    GroupMemberSyncBadRequestResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        message:
+          type: string
+        app_error_code:
+          type: string
+        trace_id:
+          type: string
+      required:
+      - app_error_code
+      - message
+      - timestamp
+      - trace_id
+    GroupMemberSyncDetailResponse:
+      type: object
+      description: Response containing a single group member sync detail resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/GroupMemberSyncResponse'
+      required:
+      - data
+    GroupMemberSyncMemberRequest:
+      type: object
+      properties:
+        reference_id:
+          type: string
+          maxLength: 255
+          minLength: 1
+        first_name:
+          type: string
+          maxLength: 255
+        last_name:
+          type: string
+          maxLength: 255
+        date_of_birth:
+          type: string
+          format: date
+        phone:
+          type: string
+        plan_id:
+          type: string
+          format: uuid
+        address:
+          $ref: '#/components/schemas/AddressRequest'
+        email:
+          type: string
+          format: email
+          nullable: true
+      required:
+      - address
+      - date_of_birth
+      - first_name
+      - last_name
+      - phone
+      - plan_id
+      - reference_id
+    GroupMemberSyncNotFoundResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        message:
+          type: string
+        app_error_code:
+          type: string
+        trace_id:
+          type: string
+      required:
+      - app_error_code
+      - message
+      - timestamp
+      - trace_id
+    GroupMemberSyncRequest:
+      type: object
+      properties:
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMemberSyncMemberRequest'
+      required:
+      - members
+    GroupMemberSyncRequestDetail:
+      type: object
+      properties:
+        request_id:
+          type: string
+        group_id:
+          type: string
+        accepted_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        results:
+          nullable: true
+      required:
+      - accepted_at
+      - completed_at
+      - group_id
+      - request_id
+      - results
+    GroupMemberSyncRequestDetailBadRequestResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        message:
+          type: string
+        app_error_code:
+          type: string
+        trace_id:
+          type: string
+      required:
+      - app_error_code
+      - message
+      - timestamp
+      - trace_id
+    GroupMemberSyncRequestDetailNotFoundResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+        message:
+          type: string
+        app_error_code:
+          type: string
+        trace_id:
+          type: string
+      required:
+      - app_error_code
+      - message
+      - timestamp
+      - trace_id
+    GroupMemberSyncRequestDetailResponse:
+      type: object
+      description: Response containing a single group member sync request detail resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/GroupMemberSyncRequestDetail'
+      required:
+      - data
+    GroupMemberSyncResponse:
+      type: object
+      properties:
+        request_id:
+          type: string
+        group_id:
+          type: string
+        accepted_at:
+          type: string
+          format: date-time
+      required:
+      - accepted_at
+      - group_id
+      - request_id
     GroupResponse:
       type: object
       description: Response containing a single group resource.
@@ -6343,6 +6933,8 @@ components:
       type: string
       example: grp_abc123def456
       description: Unique group identifier (grp_*)
+    RequestId:
+      type: string
     CreatedAfter:
       type: string
       format: date-time
