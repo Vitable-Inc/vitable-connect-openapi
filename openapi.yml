@@ -4064,6 +4064,24 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GroupMemberSyncRequest'
+            examples:
+              GroupMemberSyncRequest:
+                value:
+                  members:
+                  - reference_id: EMP-001
+                    first_name: Jane
+                    last_name: Doe
+                    date_of_birth: '1990-05-15'
+                    email: jane.doe@acme.com
+                    phone: '4155550100'
+                    plan_id: pln_abc123def456
+                    address:
+                      address_line_1: 123 Main Street
+                      address_line_2: Apt 4B
+                      city: San Francisco
+                      state: CA
+                      zipcode: '94102'
+                summary: Group Member Sync Request
         required: true
       security:
       - APIKeyAuth: []
@@ -4073,6 +4091,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupMemberSyncDetailResponse'
+              examples:
+                GroupMemberSyncAccepted:
+                  value:
+                    data:
+                      request_id: grpmsr_abc123def456
+                      group_id: grp_abc123def456
+                      accepted_at: '2026-01-15T10:30:00Z'
+                  summary: Group Member Sync Accepted
           description: ''
           headers:
             X-RateLimit-Limit:
@@ -4273,6 +4299,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GroupMemberSyncRequestDetailResponse'
+              examples:
+                GroupMemberSyncRequestDetail:
+                  value:
+                    data:
+                      request_id: grpmsr_abc123def456
+                      group_id: grp_abc123def456
+                      accepted_at: '2026-01-15T10:30:00Z'
+                      completed_at: '2026-01-15T10:30:42Z'
+                      results:
+                        added_group_member_ids:
+                        - grpmbr_abc123def456
+                        removed_group_member_ids:
+                        - grpmbr_xyz789ghi012
+                        failures:
+                        - reference_id: EMP-002
+                          operation: add
+                          reason: Invalid plan_id
+                  summary: Group Member Sync Request Detail
           description: ''
           headers:
             X-RateLimit-Limit:
@@ -6352,6 +6396,19 @@ components:
           $ref: '#/components/schemas/GroupMemberSyncResponse'
       required:
       - data
+    GroupMemberSyncFailure:
+      type: object
+      properties:
+        reference_id:
+          type: string
+        operation:
+          $ref: '#/components/schemas/Operation'
+        reason:
+          type: string
+      required:
+      - operation
+      - reason
+      - reference_id
     GroupMemberSyncMemberRequest:
       type: object
       properties:
@@ -6428,6 +6485,8 @@ components:
           format: date-time
           nullable: true
         results:
+          allOf:
+          - $ref: '#/components/schemas/GroupMemberSyncResults'
           nullable: true
       required:
       - accepted_at
@@ -6489,6 +6548,25 @@ components:
       - accepted_at
       - group_id
       - request_id
+    GroupMemberSyncResults:
+      type: object
+      properties:
+        added_group_member_ids:
+          type: array
+          items:
+            type: string
+        removed_group_member_ids:
+          type: array
+          items:
+            type: string
+        failures:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupMemberSyncFailure'
+      required:
+      - added_group_member_ids
+      - failures
+      - removed_group_member_ids
     GroupResponse:
       type: object
       description: Response containing a single group resource.
@@ -6523,6 +6601,14 @@ components:
             $ref: '#/components/schemas/WebhookDelivery'
       required:
       - data
+    Operation:
+      enum:
+      - add
+      - remove
+      type: string
+      description: |-
+        * `add` - add
+        * `remove` - remove
     Pagination:
       type: object
       description: Pagination metadata for list responses.
