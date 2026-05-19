@@ -3110,7 +3110,7 @@ paths:
                   value:
                     data:
                     - id: grp_abc123def456
-                      organization_id: 00000000-0000-0000-0000-000000000001
+                      organization_id: org_abc123def456
                       name: Tier 1
                       external_reference_id: mol_seg_001
                       created_at: '2026-01-15T10:30:00Z'
@@ -3338,6 +3338,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateGroupRequest'
+            examples:
+              CreateGroupRequest:
+                value:
+                  name: Tier 1
+                  external_reference_id: mol_seg_001
+                summary: Create Group Request
         required: true
       security:
       - APIKeyAuth: []
@@ -3352,7 +3358,7 @@ paths:
                   value:
                     data:
                       id: grp_abc123def456
-                      organization_id: 00000000-0000-0000-0000-000000000001
+                      organization_id: org_abc123def456
                       name: Tier 1
                       external_reference_id: mol_seg_001
                       created_at: '2026-01-15T10:30:00Z'
@@ -3375,6 +3381,12 @@ paths:
               schema:
                 type: integer
                 example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -3591,7 +3603,7 @@ paths:
                   value:
                     data:
                       id: grp_abc123def456
-                      organization_id: 00000000-0000-0000-0000-000000000001
+                      organization_id: org_abc123def456
                       name: Tier 1
                       external_reference_id: mol_seg_001
                       created_at: '2026-01-15T10:30:00Z'
@@ -3821,6 +3833,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/PatchedUpdateGroupRequest'
+            examples:
+              UpdateGroupRequest:
+                value:
+                  name: Tier 1 (renamed)
+                  external_reference_id: mol_seg_001_v2
+                summary: Update Group Request
       security:
       - APIKeyAuth: []
       responses:
@@ -3834,11 +3852,11 @@ paths:
                   value:
                     data:
                       id: grp_abc123def456
-                      organization_id: 00000000-0000-0000-0000-000000000001
-                      name: Tier 1
-                      external_reference_id: mol_seg_001
+                      organization_id: org_abc123def456
+                      name: Tier 1 (renamed)
+                      external_reference_id: mol_seg_001_v2
                       created_at: '2026-01-15T10:30:00Z'
-                      updated_at: '2026-01-15T10:30:00Z'
+                      updated_at: '2026-01-16T09:12:00Z'
                   summary: Updated Group
           description: ''
           headers:
@@ -3857,6 +3875,12 @@ paths:
               schema:
                 type: integer
                 example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -4116,18 +4140,34 @@ paths:
               schema:
                 type: integer
                 example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
         '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupMemberSyncBadRequestResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupMemberSyncNotFoundResponse'
-          description: ''
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - Invalid or missing API key
           headers:
@@ -4152,6 +4192,28 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -4335,17 +4397,27 @@ paths:
                 type: integer
                 example: 1700000000
         '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GroupMemberSyncRequestDetailBadRequestResponse'
-          description: ''
-        '404':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GroupMemberSyncRequestDetailNotFoundResponse'
-          description: ''
+                $ref: '#/components/schemas/ErrorResponse'
         '401':
           description: Unauthorized - Invalid or missing API key
           headers:
@@ -4370,6 +4442,28 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -6338,20 +6432,30 @@ components:
       properties:
         id:
           type: string
+          example: grp_abc123def456
+          description: Prefixed group identifier (`grp_<base64-encoded-uuid>`).
         organization_id:
           type: string
+          example: org_abc123def456
+          description: Prefixed organization identifier (`org_<base64-encoded-uuid>`).
         name:
           type: string
+          description: Human-readable group name.
+          maxLength: 255
         external_reference_id:
           type: string
+          description: Stable identifier for this group in the integrator's own system.
+          maxLength: 255
         created_at:
           type: string
           format: date-time
           nullable: true
+          description: Group creation timestamp (ISO 8601, UTC).
         updated_at:
           type: string
           format: date-time
           nullable: true
+          description: Last-update timestamp (ISO 8601, UTC).
       required:
       - created_at
       - external_reference_id
@@ -6372,22 +6476,6 @@ components:
       required:
       - data
       - pagination
-    GroupMemberSyncBadRequestResponse:
-      type: object
-      properties:
-        timestamp:
-          type: string
-        message:
-          type: string
-        app_error_code:
-          type: string
-        trace_id:
-          type: string
-      required:
-      - app_error_code
-      - message
-      - timestamp
-      - trace_id
     GroupMemberSyncDetailResponse:
       type: object
       description: Response containing a single group member sync detail resource.
@@ -6445,22 +6533,6 @@ components:
       - phone
       - plan_id
       - reference_id
-    GroupMemberSyncNotFoundResponse:
-      type: object
-      properties:
-        timestamp:
-          type: string
-        message:
-          type: string
-        app_error_code:
-          type: string
-        trace_id:
-          type: string
-      required:
-      - app_error_code
-      - message
-      - timestamp
-      - trace_id
     GroupMemberSyncRequest:
       type: object
       properties:
@@ -6494,38 +6566,6 @@ components:
       - group_id
       - request_id
       - results
-    GroupMemberSyncRequestDetailBadRequestResponse:
-      type: object
-      properties:
-        timestamp:
-          type: string
-        message:
-          type: string
-        app_error_code:
-          type: string
-        trace_id:
-          type: string
-      required:
-      - app_error_code
-      - message
-      - timestamp
-      - trace_id
-    GroupMemberSyncRequestDetailNotFoundResponse:
-      type: object
-      properties:
-        timestamp:
-          type: string
-        message:
-          type: string
-        app_error_code:
-          type: string
-        trace_id:
-          type: string
-      required:
-      - app_error_code
-      - message
-      - timestamp
-      - trace_id
     GroupMemberSyncRequestDetailResponse:
       type: object
       description: Response containing a single group member sync request detail resource.
