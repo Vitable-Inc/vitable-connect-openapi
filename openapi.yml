@@ -1370,6 +1370,41 @@ paths:
               schema:
                 type: integer
                 example: 1700000000
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerErrorResponse'
+              examples:
+                EINAlreadyExists:
+                  value:
+                    error:
+                      code: EIN_ALREADY_EXISTS
+                      message: An employer with this EIN already exists.
+                  summary: EIN already exists
+                PhoneAlreadyExists:
+                  value:
+                    error:
+                      code: PHONE_ALREADY_EXISTS
+                      message: An employer with this phone number already exists.
+                  summary: Phone already exists
+          description: 'A unique field collides with an existing employer. The `error.code` is one of: `EIN_ALREADY_EXISTS`, `NAME_ALREADY_EXISTS`, `LEGAL_NAME_ALREADY_EXISTS`, `EMAIL_ALREADY_EXISTS`, `PHONE_ALREADY_EXISTS`.'
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -1489,28 +1524,6 @@ paths:
                 - quota-based
                 - burst-based
                 - concurrent-limit
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '409':
-          description: Conflict - Resource already exists or conflicts with current state
-          headers:
-            X-RateLimit-Limit:
-              description: Maximum number of requests allowed within the rate limit window
-              schema:
-                type: integer
-                example: 1000
-            X-RateLimit-Remaining:
-              description: Number of requests remaining in the current rate limit window
-              schema:
-                type: integer
-                example: 999
-            X-RateLimit-Reset:
-              description: Unix timestamp (seconds) when the rate limit window resets
-              schema:
-                type: integer
-                example: 1700000000
           content:
             application/json:
               schema:
@@ -3387,6 +3400,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -3881,6 +3910,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -4146,6 +4191,22 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
           description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -5171,6 +5232,22 @@ paths:
                 example: 1700000000
         '404':
           description: No response body
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -5401,6 +5478,22 @@ paths:
                 example: 1700000000
         '404':
           description: No response body
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '400':
           description: Bad Request - Invalid input or validation error
           headers:
@@ -6245,6 +6338,25 @@ components:
       - city
       - state
       - zipcode
+    EmployerError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code.
+        message:
+          type: string
+          description: Human-readable error description.
+      required:
+      - code
+      - message
+    EmployerErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/EmployerError'
+      required:
+      - error
     EmployerListResponse:
       type: object
       description: Paginated list response containing employer resources.
