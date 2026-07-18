@@ -263,7 +263,7 @@ paths:
   /v1/employees/{employee_id}:
     get:
       operationId: get_employee
-      description: Retrieves detailed information for a specific employee by ID. Returns employee details including personal information, employment status, and payroll deductions from the most recent statement period. Deductions reflect a snapshot of the current period and are replaced when a new statement is generated.
+      description: Retrieves detailed information for a specific employee by ID. Returns employee details including personal information, employment status, classification and compensation-type effective dates, compensation type, and payroll deductions from the most recent statement period. Deductions reflect a snapshot of the current period and are replaced when a new statement is generated.
       summary: Get employee
       parameters:
       - in: path
@@ -298,7 +298,10 @@ paths:
                       phone: '4155551234'
                       employee_class: Full Time
                       status: active
-                      hire_date: '2023-01-15'
+                      start_date: '2023-01-15'
+                      classification_effective_date: '2023-03-01'
+                      compensation_type: Salary
+                      compensation_type_effective_date: '2023-03-01'
                       termination_date: null
                       address:
                         address_line_1: 456 Oak Avenue
@@ -306,18 +309,33 @@ paths:
                         city: San Francisco
                         state: CA
                         zipcode: '94102'
-                      deductions:
-                      - deduction_category: null
-                        deduction_amount_in_cents: 5000
-                        tax_classification: pre_tax
-                        frequency: monthly
-                        benefit_name: Gold PPO Plan
-                        period_start_date: '2025-01-01'
-                        period_end_date: '2025-01-31'
+                      deductions: []
                       created_at: '2023-01-15T09:00:00Z'
                       updated_at: '2024-06-01T14:30:00Z'
                   summary: Employee Detail
           description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -400,8 +418,227 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: update_employee
+      description: Updates employee personal, contact, address, and employment fields. This endpoint currently supports email, phone, gender, address, employee_class, start_date, and compensation_type. effective_date is required and applies to employee_class and compensation_type when those fields are included in the request.
+      summary: Update employee
+      parameters:
+      - in: path
+        name: employee_id
+        schema:
+          $ref: '#/components/schemas/EmployeeId'
+        description: Unique employee identifier (empl_*)
+        required: true
+      tags:
+      - Employees
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateEmployeeRequest'
+            examples:
+              UpdateEmployeeEmployment:
+                value:
+                  employee_class: Full Time
+                  start_date: '2023-01-15'
+                  compensation_type: Salary
+                  effective_date: '2023-03-01'
+                summary: Update Employee Employment
+        required: true
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeResponse'
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Invalid request.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '404':
-          description: Not Found - The requested resource does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -2177,7 +2414,10 @@ paths:
                       phone: '4155551234'
                       employee_class: Full Time
                       status: active
-                      hire_date: '2023-01-15'
+                      start_date: '2023-01-15'
+                      classification_effective_date: '2023-03-01'
+                      compensation_type: Salary
+                      compensation_type_effective_date: '2023-03-01'
                       termination_date: null
                       address:
                         address_line_1: 456 Oak Avenue
@@ -2202,6 +2442,50 @@ paths:
                       total_pages: 1
                   summary: Employees List
           description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -2264,28 +2548,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions for this resource
-          headers:
-            X-RateLimit-Limit:
-              description: Maximum number of requests allowed within the rate limit window
-              schema:
-                type: integer
-                example: 1000
-            X-RateLimit-Remaining:
-              description: Number of requests remaining in the current rate limit window
-              schema:
-                type: integer
-                example: 999
-            X-RateLimit-Reset:
-              description: Unix timestamp (seconds) when the rate limit window resets
-              schema:
-                type: integer
-                example: 1700000000
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not Found - The requested resource does not exist
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -5864,7 +6126,6 @@ components:
         employee_class:
           allOf:
           - $ref: '#/components/schemas/EmployeeClass'
-          nullable: true
           description: |-
             Employment classification affecting benefit eligibility
 
@@ -5875,14 +6136,31 @@ components:
             * `Seasonal` - Seasonal
             * `Individual Contractor` - Individual Contractor
         status:
-          type: string
-          readOnly: true
+          allOf:
+          - $ref: '#/components/schemas/EmployeeStatus'
           description: Employee status (active or terminated)
-        hire_date:
+          readOnly: true
+        start_date:
           type: string
           format: date
+          readOnly: true
+          description: Employee's start date with the employer
+        classification_effective_date:
+          type: string
+          format: date
+          readOnly: true
+          description: Date the employee's current classification took effect
+        compensation_type:
+          allOf:
+          - $ref: '#/components/schemas/CompensationType'
+          description: Employee's compensation type
           nullable: true
-          description: Employee's hire date with the employer
+          readOnly: true
+        compensation_type_effective_date:
+          type: string
+          format: date
+          readOnly: true
+          description: Date the employee's current compensation type took effect
         termination_date:
           type: string
           format: date
@@ -5907,15 +6185,20 @@ components:
           format: date-time
           description: Timestamp when the employee was last updated
       required:
+      - classification_effective_date
+      - compensation_type
+      - compensation_type_effective_date
       - created_at
       - date_of_birth
       - deductions
       - email
+      - employee_class
       - first_name
       - id
       - last_name
       - member_id
       - phone
+      - start_date
       - status
       - updated_at
     EmployeeAddress:
@@ -5942,6 +6225,36 @@ components:
       - city
       - state
       - zipcode
+    EmployeeAddressInput:
+      type: object
+      properties:
+        street_1:
+          type: string
+          description: Primary street address
+        street_2:
+          type: string
+          nullable: true
+          description: Secondary street address
+        city:
+          type: string
+          description: City name
+        state:
+          type: string
+          description: Two-letter state code
+          maxLength: 2
+          minLength: 2
+        zip_code:
+          type: string
+          description: ZIP code
+        country:
+          type: string
+          default: US
+          description: Country code
+      required:
+      - city
+      - state
+      - street_1
+      - zip_code
     EmployeeClass:
       enum:
       - Full Time
@@ -5979,6 +6292,11 @@ components:
           $ref: '#/components/schemas/Employee'
       required:
       - data
+    EmployeeStatus:
+      enum:
+      - active
+      - terminated
+      type: string
     Employer:
       type: object
       description: Serializer for Employer entity in public API responses.
@@ -6276,6 +6594,32 @@ components:
         * `enrolled` - Enrolled
         * `waived` - Waived
         * `inactive` - Inactive
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        message:
+          type: string
+          description: Human-readable error message
+        error:
+          type: string
+          description: Error message (same as message, for backwards compatibility)
+        app_error_code:
+          type: string
+          nullable: true
+          description: Application-specific error code for programmatic handling
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for debugging and support requests
+      required:
+      - timestamp
+      - message
+      - error
+      - trace_id
     Frequency:
       enum:
       - weekly
@@ -6288,6 +6632,20 @@ components:
         * `bi_weekly` - Bi Weekly
         * `semi_monthly` - Semi Monthly
         * `monthly` - Monthly
+    Gender:
+      enum:
+      - Male
+      - Female
+      - Transgender
+      - Non-binary
+      - Prefer not to respond
+      type: string
+      description: |-
+        * `Male` - Male
+        * `Female` - Female
+        * `Transgender` - Transgender
+        * `Non-binary` - Non-binary
+        * `Prefer not to respond` - Prefer not to respond
     GrantType:
       enum:
       - client_credentials
@@ -6536,6 +6894,68 @@ components:
       - page
       - total
       - total_pages
+    PatchedUpdateEmployeeRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: Email address
+        phone:
+          type: string
+          nullable: true
+          description: Phone number
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/Gender'
+          nullable: true
+          description: |-
+            Gender identity
+
+            * `Male` - Male
+            * `Female` - Female
+            * `Transgender` - Transgender
+            * `Non-binary` - Non-binary
+            * `Prefer not to respond` - Prefer not to respond
+        address:
+          allOf:
+          - $ref: '#/components/schemas/EmployeeAddressInput'
+          nullable: true
+          description: Employee's residential address
+        employee_class:
+          allOf:
+          - $ref: '#/components/schemas/EmployeeClass'
+          nullable: true
+          description: |-
+            Employment classification
+
+            * `Full Time` - Full Time
+            * `Part Time` - Part Time
+            * `Temporary` - Temporary
+            * `Intern` - Intern
+            * `Seasonal` - Seasonal
+            * `Individual Contractor` - Individual Contractor
+        start_date:
+          type: string
+          format: date
+          nullable: true
+          description: Employment start date
+        compensation_type:
+          allOf:
+          - $ref: '#/components/schemas/CompensationType'
+          nullable: true
+          description: |-
+            Employee compensation type
+
+            * `Salary` - Salary
+            * `Hourly` - Hourly
+        effective_date:
+          type: string
+          format: date
+          description: Past or present date applied to each tracked employment field included in this request
+      required:
+      - effective_date
     PatchedUpdateGroupRequest:
       type: object
       properties:
@@ -6917,32 +7337,6 @@ components:
           $ref: '#/components/schemas/WebhookEvent'
       required:
       - data
-    ErrorResponse:
-      type: object
-      properties:
-        timestamp:
-          type: string
-          format: date-time
-          description: ISO 8601 timestamp when the error occurred
-        message:
-          type: string
-          description: Human-readable error message
-        error:
-          type: string
-          description: Error message (same as message, for backwards compatibility)
-        app_error_code:
-          type: string
-          nullable: true
-          description: Application-specific error code for programmatic handling
-        trace_id:
-          type: string
-          format: uuid
-          description: Unique trace ID for debugging and support requests
-      required:
-      - timestamp
-      - message
-      - error
-      - trace_id
     EmployeeId:
       type: string
       example: empl_abc123def456
