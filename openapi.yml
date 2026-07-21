@@ -263,7 +263,7 @@ paths:
   /v1/auth/complete-profile:
     post:
       operationId: complete_profile
-      description: 'Collects the required profile fields (first_name, last_name, phone) for a verified IdP identity and provisions the asclepius user: creates the BaseUser (of the app-context''s user_type, with the real phone) + the OrganizationUser persona (name). When a same-email account already exists (verified email) it links + finishes that account instead. Returns the auth session. Domain failures surface as the normalized error envelope with an `app_error_code`: 403 `email_verification_required`; 409 `identity_conflict` / `phone_in_use` / `needs_selection` (fetch candidates via `/personas`); 422 `invalid_phone`.'
+      description: 'Collects the required profile fields (first_name, last_name, phone) for a verified IdP identity and provisions the asclepius user: creates the BaseUser (of the app-context''s user_type, with the real phone) + the OrganizationUser persona (name). An optional `user_type` narrows provisioning/resolution to a single persona type. When a same-email account already exists (verified email) it links + finishes that account instead. Returns the auth session. Domain failures surface as the normalized error envelope with an `app_error_code`: 403 `email_verification_required` / `user_type_not_allowed`; 409 `identity_conflict` / `phone_in_use` / `needs_selection` (fetch candidates via `/personas`); 422 `invalid_phone`.'
       summary: Complete profile (provision the asclepius user)
       tags:
       - Auth
@@ -327,7 +327,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Same-email account exists but the IdP email is unverified — `email_verification_required` (no link performed).
+          description: Same-email account exists but the IdP email is unverified — `email_verification_required`; or the requested user_type is not allowed — `user_type_not_allowed`.
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -1179,10 +1179,21 @@ paths:
   /v1/auth/sign-up:
     post:
       operationId: sign_up
-      description: 'Validates the IdP bearer and resolves the session. Domain failures surface as the normalized error envelope with an `app_error_code`: 409 `profile_required` when no BaseUser exists yet; 409 `no_organization`; 409 `needs_selection` (fetch candidates via `/personas`); 409 `identity_conflict`; 403 `email_verification_required`.'
+      description: 'Validates the IdP bearer and resolves the session. An optional `user_type` body field pins resolution to a single persona (strict login). Domain failures surface as the normalized error envelope with an `app_error_code`: 409 `profile_required` (no BaseUser yet) / `no_organization` / `needs_selection` (fetch candidates via `/personas`) / `identity_conflict`; 403 `email_verification_required` / `user_type_not_allowed`; 404 `persona_not_found`.'
       summary: Sign up via IdP bearer
       tags:
       - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
       security:
       - IdentityProviderBearer: []
       responses:
@@ -1231,7 +1242,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: A same-email account exists but the IdP has not verified the email — `email_verification_required` (account-takeover guard).
+          description: A same-email account exists but the IdP has not verified the email — `email_verification_required` (account-takeover guard); or the requested user_type is not allowed — `user_type_not_allowed`.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'Strict login: a user_type was supplied but no such persona exists for this identity — `persona_not_found`.'
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -1272,28 +1305,6 @@ paths:
                 example: 1700000000
         '400':
           description: Bad Request - Invalid input or validation error
-          headers:
-            X-RateLimit-Limit:
-              description: Maximum number of requests allowed within the rate limit window
-              schema:
-                type: integer
-                example: 1000
-            X-RateLimit-Remaining:
-              description: Number of requests remaining in the current rate limit window
-              schema:
-                type: integer
-                example: 999
-            X-RateLimit-Reset:
-              description: Unix timestamp (seconds) when the rate limit window resets
-              schema:
-                type: integer
-                example: 1700000000
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not Found - The requested resource does not exist
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -5852,6 +5863,233 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /v1/organizations:
+    get:
+      operationId: list_organizations
+      description: Lists the organizations the authenticated caller is an active member of (paginated). Returns an empty list when the caller belongs to no organizations.
+      summary: List my organizations
+      tags:
+      - Organizations
+      security:
+      - IdentityProviderBearer: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationsListResponse'
+              examples:
+                MyOrganizations:
+                  value:
+                    organizations:
+                    - id: org_abc123def456
+                      name: Acme Brokerage
+                      type: BROKERAGE
+                      idp_org_id: org_01J0WORKOS
+                      idp_provider: workos
+                    total: 1
+                  summary: My Organizations
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '401':
+          description: Bearer token missing or invalid.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       operationId: create_organization
       description: 'Onboards the authenticated user''s partner Organization: creates the local Organization + the creator''s admin membership atomically, then mirrors it to WorkOS (creates the WorkOS org and binds the creator as admin). 409 `organization_already_exists` when the user already has an organization (v0: one organization per user).'
@@ -7176,7 +7414,7 @@ components:
         email:
           type: string
         user_type:
-          $ref: '#/components/schemas/UserType'
+          $ref: '#/components/schemas/UserType923'
         first_name:
           type: string
           nullable: true
@@ -7399,9 +7637,10 @@ components:
       description: |-
         Profile fields collected to provision (or finish linking) the asclepius user.
 
-        Deliberately NO `user_type`: the provisioning target is derived from the app-context's
-        single allowed user_type (no client-chosen persona). Phone format is validated in the
-        domain (`PhoneNumber`), which raises `invalid_phone` (422) on a bad value.
+        Phone format is validated in the domain (`PhoneNumber`), which raises `invalid_phone`
+        (422) on a bad value. The optional `user_type` narrows the app-context to a single
+        persona type (intersection with the app's allowed set — never widens); omitted → the
+        provisioning target is derived from the app-context's single allowed user_type.
       properties:
         first_name:
           type: string
@@ -7409,6 +7648,8 @@ components:
           type: string
         phone:
           type: string
+        user_type:
+          $ref: '#/components/schemas/UserType923'
       required:
       - first_name
       - last_name
@@ -8345,7 +8586,7 @@ components:
         password:
           type: string
         user_type:
-          $ref: '#/components/schemas/UserType'
+          $ref: '#/components/schemas/UserType923'
       required:
       - email_or_phone
       - password
@@ -8410,23 +8651,67 @@ components:
           type: string
           description: Human-readable organization name.
         type:
-          type: string
+          allOf:
+          - $ref: '#/components/schemas/OrganizationType'
           nullable: true
-          description: Partner type (e.g. BROKERAGE, TPA).
+          description: |-
+            Partner type (e.g. BROKERAGE, TPA).
+
+            * `BROKERAGE` - Brokerage
+            * `TPA` - TPA
+            * `GENERAL_AGENT` - General Agent
+            * `CHANNEL_PARTNER` - Channel Partner
+            * `CONSULTING_FIRM` - Consulting Firm
+            * `API_PLATFORM` - API Platform
         idp_org_id:
           type: string
           nullable: true
           description: IdP-issued tenant id (WorkOS org id).
         idp_provider:
-          type: string
+          allOf:
+          - $ref: '#/components/schemas/IdpProvider'
           nullable: true
-          description: IdP that minted idp_org_id (e.g. 'workos').
+          description: |-
+            IdP that minted idp_org_id (e.g. 'workos').
+
+            * `workos` - WorkOS
+            * `vitable` - Vitable
       required:
       - id
       - idp_org_id
       - idp_provider
       - name
       - type
+    OrganizationType:
+      enum:
+      - BROKERAGE
+      - TPA
+      - GENERAL_AGENT
+      - CHANNEL_PARTNER
+      - CONSULTING_FIRM
+      - API_PLATFORM
+      type: string
+      description: |-
+        * `BROKERAGE` - Brokerage
+        * `TPA` - TPA
+        * `GENERAL_AGENT` - General Agent
+        * `CHANNEL_PARTNER` - Channel Partner
+        * `CONSULTING_FIRM` - Consulting Firm
+        * `API_PLATFORM` - API Platform
+    OrganizationsListResponse:
+      type: object
+      description: Envelope for the caller's organization memberships (paginated).
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Organization'
+        total:
+          type: integer
+          description: Total number of organizations the caller belongs to.
+      required:
+      - organizations
+      - total
     Pagination:
       type: object
       description: Pagination metadata for list responses.
@@ -8526,7 +8811,7 @@ components:
       type: object
       properties:
         user_type:
-          $ref: '#/components/schemas/UserType'
+          $ref: '#/components/schemas/UserType923'
         display_name:
           type: string
       required:
@@ -8589,6 +8874,44 @@ components:
         * `ICHRA` - Ichra
         * `ICHRA_PREMIUM_PLUS` - Ichra Premium Plus
         * `ICHRA_REIMBURSEMENT_ONLY` - Ichra Reimbursement Only
+    SignUpRequest:
+      type: object
+      properties:
+        user_type:
+          allOf:
+          - $ref: '#/components/schemas/SignUpRequestUserType'
+          nullable: true
+          description: |-
+            Optional: pin resolution to a single persona type (strict login).
+
+            * `Member` - Member
+            * `NursePractitioner` - NursePractitioner
+            * `CompanyAdmin` - CompanyAdmin
+            * `VitableAdmin` - VitableAdmin
+            * `ClinicalAdmin` - ClinicalAdmin
+            * `PartnerEmployee` - PartnerEmployee
+            * `OrganizationUser` - OrganizationUser
+            * `ExternalAdmin` - ExternalAdmin
+    SignUpRequestUserType:
+      enum:
+      - Member
+      - NursePractitioner
+      - CompanyAdmin
+      - VitableAdmin
+      - ClinicalAdmin
+      - PartnerEmployee
+      - OrganizationUser
+      - ExternalAdmin
+      type: string
+      description: |-
+        * `Member` - Member
+        * `NursePractitioner` - NursePractitioner
+        * `CompanyAdmin` - CompanyAdmin
+        * `VitableAdmin` - VitableAdmin
+        * `ClinicalAdmin` - ClinicalAdmin
+        * `PartnerEmployee` - PartnerEmployee
+        * `OrganizationUser` - OrganizationUser
+        * `ExternalAdmin` - ExternalAdmin
     State:
       enum:
       - AL
@@ -8804,7 +9127,7 @@ components:
         * `bi_weekly` - bi_weekly
         * `semi_monthly` - semi_monthly
         * `monthly` - monthly
-    UserType:
+    UserType923:
       enum:
       - Member
       - NursePractitioner
