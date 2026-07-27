@@ -514,8 +514,8 @@ paths:
   /v1/auth/login:
     post:
       operationId: auth_login
-      description: 'Verifies first-party email/password credentials and returns a session with a freshly minted access/refresh token pair. Domain failures surface as the normalized error envelope with an `app_error_code`: 401 `invalid_credentials` / `two_factor_required`; 403 `user_type_not_allowed`; 409 `no_organization`.'
-      summary: Sign in with Vitable email + password
+      description: 'One body-driven sign-in endpoint. Supply `email_or_phone` + `password` for the standard flow, or `email_or_phone` (no password) for the passwordless OTP flow. When the account has MFA enabled — or on the first passwordless step — an OTP challenge is issued and the response is a 200 `{"pending_2fa": true, "destination_hint": "…"}`; resubmit the same credentials plus `two_factor_token` to complete sign-in and receive a session with a freshly minted access/refresh token pair. Domain failures surface as the normalized error envelope with an `app_error_code`: 401 `invalid_credentials`; 403 `user_type_not_allowed`; 409 `no_organization`.'
+      summary: Sign in with Vitable credentials (password or passwordless OTP)
       tags:
       - Auth
       requestBody:
@@ -558,7 +558,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: Invalid credentials (`invalid_credentials`) or MFA required (`two_factor_required`).
+          description: Invalid credentials or a bad/expired OTP token (`invalid_credentials`).
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -8580,16 +8580,32 @@ components:
       - data
     LoginRequest:
       type: object
+      description: |-
+        Body validator for POST /v1/auth/login — supports both credential flows.
+
+        A single `email_or_phone` identifier (Vitable accounts sign in with either their email or their
+        phone number). Standard: `email_or_phone` + `password` (+ optional `two_factor_token` for the MFA
+        second step). Passwordless: `email_or_phone` (no password) + optional `two_factor_token` (the OTP
+        code). The controller branches on the presence of `password`.
+
+        `email_or_phone` is required: an OTP / 2FA token is not unique per user, so the identifier is
+        always needed to resolve who is signing in. `app_name` / `app_version` identify the calling client
+        for the login-attempt audit records.
       properties:
+        user_type:
+          $ref: '#/components/schemas/UserType923'
         email_or_phone:
           type: string
         password:
           type: string
-        user_type:
-          $ref: '#/components/schemas/UserType923'
+        two_factor_token:
+          type: string
+        app_name:
+          type: string
+        app_version:
+          type: string
       required:
       - email_or_phone
-      - password
       - user_type
     LoginResponse:
       type: object
