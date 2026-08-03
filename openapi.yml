@@ -2172,19 +2172,44 @@ paths:
   /v1/employers:
     get:
       operationId: list_employers
-      description: Retrieves a paginated list of all employers belonging to the authenticated organization. Results are sorted by creation date (newest first) and paginated using page and limit parameters.
+      description: Returns the caller's organization book — every employer with its computed columns (enrollment-rate summary, benefit-family tags, HRIS connection, benefit-lifecycle stage) merged with the employer's flat CRM fields (legal name, EIN, contact, address, timestamps). The organization is derived from the authenticated principal. Supports name search, benefit-family/lifecycle/HRIS filters, and page/limit pagination.
       summary: List employers
       parameters:
+      - in: query
+        name: benefit_family
+        schema:
+          $ref: '#/components/schemas/BenefitFamily'
+        description: Filter to employers with at least one active benefit in these families.
+      - in: query
+        name: benefit_lifecycle_stage
+        schema:
+          $ref: '#/components/schemas/BenefitLifecycleStage'
+        description: Filter to employers in one of these computed benefit-lifecycle stages.
+      - in: query
+        name: hris_status
+        schema:
+          $ref: '#/components/schemas/HrisStatus'
+        description: Filter to employers whose HRIS connection is in one of these statuses.
+      - in: query
+        name: include_cancelled
+        schema:
+          $ref: '#/components/schemas/IncludeCancelled'
+        description: Include cancelled employers (hidden by default unless their stage is explicitly requested).
       - in: query
         name: limit
         schema:
           $ref: '#/components/schemas/Limit'
-        description: 'Items per page (default: 20, max: 100)'
+        description: Items per page.
       - in: query
         name: page
         schema:
           $ref: '#/components/schemas/Page'
-        description: 'Page number (default: 1)'
+        description: Page number.
+      - in: query
+        name: search
+        schema:
+          $ref: '#/components/schemas/Search'
+        description: Case-insensitive employer-name substring filter.
       tags:
       - Employers
       security:
@@ -2194,17 +2219,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmployerListResponse'
+                $ref: '#/components/schemas/OrganizationEmployerListResponse'
               examples:
                 EmployersList:
                   value:
                     data:
-                    - id: empr_abc123def456
+                    - employer_id: empr_abc123def456
                       organization_id: org_xyz789
+                      reference_id: partner-emp-001
                       name: Acme Corporation
                       legal_name: Acme Corporation Inc.
                       ein: XX-XXX1234
-                      reference_id: partner-emp-001
                       email: hr@acme.com
                       phone_number: '4155550100'
                       active: true
@@ -2216,27 +2241,23 @@ paths:
                         zipcode: '94102'
                       created_at: '2024-01-15T10:30:00Z'
                       updated_at: '2024-06-20T14:45:00Z'
-                    - id: empr_def456ghi789
-                      organization_id: org_xyz789
-                      name: TechStart Inc
-                      legal_name: TechStart Incorporated
-                      ein: XX-XXX5678
-                      reference_id: null
-                      email: contact@techstart.com
-                      phone_number: null
-                      active: true
-                      address:
-                        address_line_1: 456 Innovation Drive
-                        address_line_2: ''
-                        city: Austin
-                        state: TX
-                        zipcode: '78701'
-                      created_at: '2024-03-01T09:00:00Z'
-                      updated_at: '2024-03-01T09:00:00Z'
+                      enrollment_rate_summary:
+                        eligible: 84
+                        enrolled: 78
+                        percentage: 93
+                      benefit_families:
+                      - MEC
+                      - ICHRA
+                      hris_status:
+                        provider: Paychex
+                        status: Active
+                      benefit_lifecycle_stage:
+                        stage: active
+                        as_of_date: '2026-12-31'
                     pagination:
                       page: 1
                       limit: 20
-                      total: 2
+                      total: 1
                       total_pages: 1
                   summary: Employers List
           description: ''
@@ -7371,6 +7392,37 @@ components:
       - access_token
       - expires_in
       - token_type
+    Address:
+      type: object
+      description: |-
+        Shared read serializer for a postal address on public API responses.
+
+        One definition for the address block every public resource emits (employer, employee, …), so the
+        5-field shape isn't hand-rolled per endpoint. Read-only: it renders an already-built address
+        value object (e.g. ``AddressDVO``) whose attributes map 1:1 to these fields.
+      properties:
+        address_line_1:
+          type: string
+          description: Primary street address.
+        address_line_2:
+          type: string
+          nullable: true
+          description: Secondary street address (apt, suite, etc.).
+        city:
+          type: string
+          description: City name.
+        state:
+          type: string
+          description: Two-letter state code (e.g. `CA`, `NY`).
+        zipcode:
+          type: string
+          description: ZIP code (5 or 9 digit).
+      required:
+      - address_line_1
+      - address_line_2
+      - city
+      - state
+      - zipcode
     AddressRequest:
       type: object
       properties:
@@ -8134,19 +8186,6 @@ components:
           $ref: '#/components/schemas/EmployerError'
       required:
       - error
-    EmployerListResponse:
-      type: object
-      description: Paginated list response containing employer resources.
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/Employer'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-      required:
-      - data
-      - pagination
     EmployerResponse:
       type: object
       description: Response containing a single employer resource.
@@ -8698,6 +8737,108 @@ components:
       - idp_provider
       - name
       - type
+    OrganizationEmployer:
+      type: object
+      description: |-
+        One employer row of the organization's book (list projection).
+
+        Carries the enriched/computed columns (enrollment roll-up, benefit-family tags, HRIS connection,
+        benefit-lifecycle stage) alongside the flat CRM fields of the underlying employer (legal name,
+        EIN, contact, address, timestamps) for parity with the legacy ``Employer`` contract.
+      properties:
+        employer_id:
+          type: string
+          example: empr_abc123def456
+          description: Prefixed employer identifier (`empr_<base64-encoded-uuid>`).
+        organization_id:
+          type: string
+          nullable: true
+          description: ID of the parent organization (`org_*`), or null when unknown.
+        reference_id:
+          type: string
+          nullable: true
+          description: The organization's own reference id for this employer, or null when none was assigned.
+        name:
+          type: string
+          description: Employer name.
+        legal_name:
+          type: string
+          nullable: true
+          description: Legal business name for compliance and tax purposes.
+        ein:
+          type: string
+          nullable: true
+          description: Employer Identification Number (masked in responses).
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: Email address for billing and communications.
+        phone_number:
+          type: string
+          nullable: true
+          description: Employer phone number.
+        active:
+          type: boolean
+          description: Whether the employer is currently active in the system.
+        address:
+          allOf:
+          - $ref: '#/components/schemas/Address'
+          description: Employer's primary address.
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the employer was created.
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the employer was last updated.
+        enrollment_rate_summary:
+          allOf:
+          - $ref: '#/components/schemas/_EnrollmentRateSummary'
+          description: Enrolled/eligible employees roll-up.
+        benefit_families:
+          type: array
+          items:
+            type: string
+          description: Distinct benefit-family tags across the employer's active benefits (e.g. `MEC`, `ICHRA`, `VPC`).
+        hris_status:
+          allOf:
+          - $ref: '#/components/schemas/_HrisStatus'
+          nullable: true
+          description: HRIS connection, or null when the employer has none.
+        benefit_lifecycle_stage:
+          $ref: '#/components/schemas/_BenefitLifecycleStage'
+      required:
+      - active
+      - address
+      - benefit_families
+      - benefit_lifecycle_stage
+      - created_at
+      - ein
+      - email
+      - employer_id
+      - enrollment_rate_summary
+      - hris_status
+      - legal_name
+      - name
+      - organization_id
+      - phone_number
+      - reference_id
+      - updated_at
+    OrganizationEmployerListResponse:
+      type: object
+      description: Paginated list response containing organization employer resources.
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationEmployer'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+      - data
+      - pagination
     OrganizationType:
       enum:
       - BROKERAGE
@@ -9260,6 +9401,48 @@ components:
           $ref: '#/components/schemas/WebhookEvent'
       required:
       - data
+    _BenefitLifecycleStage:
+      type: object
+      properties:
+        stage:
+          type: string
+          description: 'Computed employer benefit-lifecycle stage: `open_enrollment`, `renewal`, `active`, `onboarding`, or `cancelled`.'
+        as_of_date:
+          type: string
+          format: date
+          nullable: true
+          description: Anchor date for the stage (e.g. renewal date); null when not applicable.
+      required:
+      - as_of_date
+      - stage
+    _EnrollmentRateSummary:
+      type: object
+      properties:
+        eligible:
+          type: integer
+          description: Employees eligible for at least one active benefit.
+        enrolled:
+          type: integer
+          description: Employees enrolled in at least one active benefit.
+        percentage:
+          type: integer
+          description: '``enrolled / eligible`` as a whole-number percent (0 when none eligible).'
+      required:
+      - eligible
+      - enrolled
+      - percentage
+    _HrisStatus:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: HRIS/payroll provider the employer is connected to (e.g. `Paychex`).
+        status:
+          type: string
+          description: Connection status reported by the integration.
+      required:
+      - provider
+      - status
     EmployeeId:
       type: string
       example: empl_abc123def456
@@ -9277,6 +9460,71 @@ components:
       default: 1
       example: 1
       description: 'Page number (default: 1)'
+    BenefitFamily:
+      type: array
+      items:
+        enum:
+        - mec
+        - mvp
+        - ichra
+        - vpc
+        - dental
+        - vision
+        type: string
+        description: |-
+          * `mec` - mec
+          * `mvp` - mvp
+          * `ichra` - ichra
+          * `vpc` - vpc
+          * `dental` - dental
+          * `vision` - vision
+      default: []
+      description: Filter to employers with at least one active benefit in these families.
+    BenefitLifecycleStage:
+      type: array
+      items:
+        enum:
+        - open_enrollment
+        - renewal
+        - active
+        - onboarding
+        - cancelled
+        type: string
+        description: |-
+          * `open_enrollment` - open_enrollment
+          * `renewal` - renewal
+          * `active` - active
+          * `onboarding` - onboarding
+          * `cancelled` - cancelled
+      default: []
+      description: Filter to employers in one of these computed benefit-lifecycle stages.
+    HrisStatus:
+      type: array
+      items:
+        enum:
+        - Pending
+        - Active
+        - Inactive
+        - Paused
+        - Terminated
+        type: string
+        description: |-
+          * `Pending` - Pending
+          * `Active` - Active
+          * `Inactive` - Inactive
+          * `Paused` - Paused
+          * `Terminated` - Terminated
+      default: []
+      description: Filter to employers whose HRIS connection is in one of these statuses.
+    IncludeCancelled:
+      type: boolean
+      default: false
+      description: Include cancelled employers (hidden by default unless their stage is explicitly requested).
+    Search:
+      type: string
+      nullable: true
+      minLength: 1
+      description: Case-insensitive employer-name substring filter.
     EmployerId:
       type: string
       example: empr_abc123def456
