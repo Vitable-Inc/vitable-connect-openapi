@@ -8098,6 +8098,12 @@ components:
           allOf:
           - $ref: '#/components/schemas/EmployerAddress'
           description: Employer's primary address
+        contact:
+          allOf:
+          - $ref: '#/components/schemas/EmployerContact'
+          nullable: true
+          readOnly: true
+          description: Primary company-admin contact, or null
         created_at:
           type: string
           format: date-time
@@ -8109,6 +8115,7 @@ components:
       required:
       - active
       - address
+      - contact
       - created_at
       - ein
       - id
@@ -8167,6 +8174,22 @@ components:
       - city
       - state
       - zipcode
+    EmployerContact:
+      type: object
+      description: Primary company-admin contact (email + phone; company admins have no person name).
+      properties:
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: Primary contact email
+        phone:
+          type: string
+          nullable: true
+          description: Primary contact phone, or null
+      required:
+      - email
+      - phone
     EmployerError:
       type: object
       properties:
