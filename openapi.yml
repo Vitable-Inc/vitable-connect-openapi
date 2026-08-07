@@ -2178,7 +2178,7 @@ paths:
       - in: query
         name: benefit_family
         schema:
-          $ref: '#/components/schemas/BenefitFamily'
+          $ref: '#/components/schemas/BenefitFamilyParam'
         description: Filter to employers with at least one active benefit in these families.
       - in: query
         name: benefit_lifecycle_stage
@@ -3269,6 +3269,468 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/{employer_id}/benefit-plan-years:
+    get:
+      operationId: list_employer_benefit_plan_years
+      description: Returns the employer's benefit plan years (all years, or one when `year` is given), each with its benefits, offered states, benefit families, and the year-level enrollment roll-up. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
+      summary: List an employer's benefit plan years
+      parameters:
+      - in: path
+        name: employer_id
+        schema:
+          $ref: '#/components/schemas/EmployerId'
+        description: Unique employer identifier (empr_*)
+        required: true
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerBenefitPlanYearsListResponse'
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/{employer_id}/benefit-plan-years/{benefit_plan_year_id}:
+    get:
+      operationId: get_employer_benefit_plan_year
+      description: Returns one benefit plan year in full — its benefit details plus the per-benefit enrollment rate and SPD link — addressed by its `benefit_plan_year_id`. The caller must be authorized for the employer; an unknown or unauthorized plan year returns 404.
+      summary: Get one of an employer's benefit plan years
+      parameters:
+      - in: path
+        name: benefit_plan_year_id
+        schema:
+          $ref: '#/components/schemas/BenefitPlanYearId'
+        description: Unique benefit-plan-year identifier (plyr_*).
+        required: true
+      - in: path
+        name: employer_id
+        schema:
+          $ref: '#/components/schemas/EmployerId'
+        description: Unique employer identifier (empr_*)
+        required: true
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerBenefitPlanYearResponse'
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/employers/{employer_id}/census-sync:
     post:
       operationId: create_census_sync
@@ -3534,7 +3996,7 @@ paths:
   /v1/employers/{employer_id}/employees:
     get:
       operationId: list_employees
-      description: Retrieves a paginated list of all employees for a specific employer. Results are paginated using page and limit parameters. Each employee includes payroll deductions from the most recent statement period. When a new deduction statement is generated, previous period deductions are replaced.
+      description: Retrieves a paginated list of employees for a specific employer. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404. Results are paginated using page and limit parameters and can be narrowed with a case-insensitive `search` (first name, last name, or email) and an `employment_status` filter (active or terminated). Each employee includes payroll deductions from the most recent statement period. When a new deduction statement is generated, previous period deductions are replaced.
       summary: List employees
       parameters:
       - in: path
@@ -3543,6 +4005,11 @@ paths:
           $ref: '#/components/schemas/EmployerId'
         description: Unique employer identifier (empr_*)
         required: true
+      - in: query
+        name: employment_status
+        schema:
+          $ref: '#/components/schemas/EmployeeStatus'
+        description: Filter by employment status (active or terminated)
       - in: query
         name: limit
         schema:
@@ -3553,6 +4020,11 @@ paths:
         schema:
           $ref: '#/components/schemas/Page'
         description: 'Page number (default: 1)'
+      - in: query
+        name: search
+        schema:
+          $ref: '#/components/schemas/Search'
+        description: Case-insensitive search across employee first name, last name, and email
       tags:
       - Employees
       security:
@@ -3606,6 +4078,1034 @@ paths:
                       total: 1
                       total_pages: 1
                   summary: Employees List
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/{employer_id}/hris:
+    get:
+      operationId: get_employer_hris
+      description: Returns the employer's HRIS connection — provider, status, last sync, and synced row count — or null when the employer has no integration. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
+      summary: Get an employer's HRIS connection
+      parameters:
+      - in: path
+        name: employer_id
+        schema:
+          $ref: '#/components/schemas/EmployerId'
+        description: Unique employer identifier (empr_*)
+        required: true
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerHris'
+              examples:
+                EmployerHRISConnection:
+                  value:
+                    data:
+                      hris:
+                        provider: Paychex
+                        status: connected
+                        last_sync_on: '2026-05-01T00:00:00Z'
+                        synced_row_count: 84
+                  summary: Employer HRIS connection
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/{employer_id}/invoices:
+    get:
+      operationId: get_employer_invoices
+      description: Returns a cursor-paginated page of the employer's billing invoices, newest first. Pass the `next_offset` from a previous page as `offset` to fetch the next page. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
+      summary: List an employer's billing invoices
+      parameters:
+      - in: path
+        name: employer_id
+        schema:
+          $ref: '#/components/schemas/EmployerId'
+        description: Unique employer identifier (empr_*)
+        required: true
+      - in: query
+        name: limit
+        schema:
+          $ref: '#/components/schemas/Limit'
+        description: Maximum number of invoices per page
+      - in: query
+        name: offset
+        schema:
+          $ref: '#/components/schemas/Offset'
+        description: Opaque cursor from a previous page's next_offset
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerInvoicesListResponse'
+              examples:
+                EmployerInvoices:
+                  value:
+                    data:
+                    - invoice_id: INV-00042
+                      period: '2026-05-01T00:00:00+00:00'
+                      total: 1234.56
+                      status: paid
+                    pagination:
+                      next_offset: '["1748736000000", "INV-00042"]'
+                  summary: Employer invoices
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/{employer_id}/invoices/{invoice_id}/pdf:
+    get:
+      operationId: get_employer_invoice_pdf
+      description: Returns the time-limited PDF download link for a single invoice belonging to the employer's billing customer. `invoice_id` is the external Chargebee id (not a prefixed UUID). The caller must be authorized for the employer; an unknown or unauthorized employer or invoice returns 404.
+      summary: Get an employer invoice's PDF download link
+      parameters:
+      - in: path
+        name: employer_id
+        schema:
+          $ref: '#/components/schemas/EmployerId'
+        description: Unique employer identifier (empr_*)
+        required: true
+      - in: path
+        name: invoice_id
+        schema:
+          $ref: '#/components/schemas/InvoiceId'
+        description: External Chargebee invoice id (not a prefixed UUID).
+        required: true
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerInvoicePdf'
+              examples:
+                EmployerInvoicePDF:
+                  value:
+                    data:
+                      download_url: https://chargebee.example/invoices/INV-00042.pdf
+                  summary: Employer invoice PDF
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/{employer_id}/payroll-deduction-statements:
+    get:
+      operationId: get_employer_payroll_deduction_statements
+      description: Returns a paginated list of the employer's payroll-deduction statements, newest period first, each with its period, generation date, distinct employee count, total deduction, change-file link, and deduction frequency. Statements superseded by a later correction are excluded. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
+      summary: List an employer's payroll-deduction statements
+      parameters:
+      - in: path
+        name: employer_id
+        schema:
+          $ref: '#/components/schemas/EmployerId'
+        description: Unique employer identifier (empr_*)
+        required: true
+      - in: query
+        name: limit
+        schema:
+          $ref: '#/components/schemas/Limit'
+        description: Maximum number of statements per page
+      - in: query
+        name: page
+        schema:
+          $ref: '#/components/schemas/Page'
+        description: Page number to retrieve (starts at 1)
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployerPayrollDeductionStatementListResponse'
+              examples:
+                EmployerPayroll-deductionStatements:
+                  value:
+                    data:
+                    - statement_id: pstmt_abc123def456
+                      period_start: '2026-05-01'
+                      period_end: '2026-05-31'
+                      run_date: '2026-06-01T00:00:00Z'
+                      employee_count: 12
+                      total_deduction_cents: 345600
+                      csv_file_url: https://files.example/pds-1.csv
+                      deduction_frequency: monthly
+                      deduction_frequency_label: Monthly
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 1
+                      total_pages: 1
+                  summary: Employer payroll-deduction statements
           description: ''
           headers:
             X-RateLimit-Limit:
@@ -7737,6 +9237,264 @@ components:
       - last_name
       - phone
       - user_type
+    BenefitFamily:
+      enum:
+      - mec
+      - mvp
+      - ichra
+      - vpc
+      - dental
+      - vision
+      type: string
+      description: |-
+        * `mec` - Mec
+        * `mvp` - Mvp
+        * `ichra` - Ichra
+        * `vpc` - Vpc
+        * `dental` - Dental
+        * `vision` - Vision
+    BenefitPlanYearDetail:
+      type: object
+      description: |-
+        One plan year, detail view.
+
+        Standalone (no shared base) so the exact detail payload is readable in one place; the list
+        serializer is a separate class even where fields overlap. Detail carries the SPD link and omits
+        the list-only ``is_current`` flag.
+      properties:
+        benefit_plan_year_id:
+          type: string
+          description: Prefixed plan-year identifier (`plyr_*`).
+        benefit_id:
+          type: string
+          description: Prefixed benefit identifier (`bprd_*`).
+        year:
+          type: integer
+          description: Calendar coverage year.
+        family:
+          allOf:
+          - $ref: '#/components/schemas/BenefitFamily'
+          description: |-
+            Benefit family.
+
+            * `mec` - Mec
+            * `mvp` - Mvp
+            * `ichra` - Ichra
+            * `vpc` - Vpc
+            * `dental` - Dental
+            * `vision` - Vision
+        product_name:
+          type: string
+          description: Benefit/product display name.
+        carrier:
+          type: string
+          nullable: true
+          description: Carrier name, or null (e.g. ICHRA).
+        network_names:
+          type: array
+          items:
+            type: string
+          description: 'Displayed networks: ["multi"] for ICHRA, otherwise the plan year''s distinct network names.'
+        premium_in_cents:
+          type: integer
+          nullable: true
+          description: Monthly premium in cents; only for an ICHRA benefit with effective coverage.
+        employee_contribution:
+          allOf:
+          - $ref: '#/components/schemas/_ContributionRange'
+          nullable: true
+          description: Employee contribution range.
+        employer_contribution:
+          allOf:
+          - $ref: '#/components/schemas/_ContributionRange'
+          nullable: true
+          description: Employer contribution range.
+        status:
+          allOf:
+          - $ref: '#/components/schemas/BenefitStatus'
+          description: |-
+            `active`/`upcoming`/`inactive`.
+
+            * `active` - Active
+            * `upcoming` - Upcoming
+            * `open_enrollment` - Open Enrollment
+            * `inactive` - Inactive
+        coverage_start:
+          type: string
+          format: date
+          description: Coverage start.
+        coverage_end:
+          type: string
+          format: date
+          nullable: true
+          description: Coverage end.
+        open_enrollment_start:
+          type: string
+          format: date
+          description: Open-enrollment start.
+        open_enrollment_end:
+          type: string
+          format: date
+          nullable: true
+          description: Open-enrollment end.
+        offered_states:
+          type: array
+          items:
+            type: string
+          description: Distinct offered state codes.
+        enrollment_rate:
+          allOf:
+          - $ref: '#/components/schemas/_EnrollmentRate'
+          description: Enrolled/eligible rate for this plan year.
+        spd_file_url:
+          type: string
+          nullable: true
+          description: Summary Plan Description (SPD) link, or null.
+      required:
+      - benefit_id
+      - benefit_plan_year_id
+      - carrier
+      - coverage_end
+      - coverage_start
+      - employee_contribution
+      - employer_contribution
+      - enrollment_rate
+      - family
+      - network_names
+      - offered_states
+      - open_enrollment_end
+      - open_enrollment_start
+      - premium_in_cents
+      - product_name
+      - spd_file_url
+      - status
+      - year
+    BenefitPlanYearList:
+      type: object
+      description: |-
+        One plan year, list view.
+
+        Standalone (no shared base) so the exact list payload is readable in one place; the detail
+        serializer is a separate class even where fields overlap.
+      properties:
+        benefit_plan_year_id:
+          type: string
+          description: Prefixed plan-year identifier (`plyr_*`).
+        benefit_id:
+          type: string
+          description: Prefixed benefit identifier (`bprd_*`).
+        year:
+          type: integer
+          description: Calendar coverage year.
+        family:
+          allOf:
+          - $ref: '#/components/schemas/BenefitFamily'
+          description: |-
+            Benefit family.
+
+            * `mec` - Mec
+            * `mvp` - Mvp
+            * `ichra` - Ichra
+            * `vpc` - Vpc
+            * `dental` - Dental
+            * `vision` - Vision
+        product_name:
+          type: string
+          description: Benefit/product display name.
+        carrier:
+          type: string
+          nullable: true
+          description: Carrier name, or null (e.g. ICHRA).
+        network_names:
+          type: array
+          items:
+            type: string
+          description: 'Displayed networks: ["multi"] for ICHRA, otherwise the plan year''s distinct network names.'
+        premium_in_cents:
+          type: integer
+          nullable: true
+          description: Monthly premium in cents; only for an ICHRA benefit with effective coverage.
+        employee_contribution:
+          allOf:
+          - $ref: '#/components/schemas/_ContributionRange'
+          nullable: true
+          description: Employee contribution range.
+        employer_contribution:
+          allOf:
+          - $ref: '#/components/schemas/_ContributionRange'
+          nullable: true
+          description: Employer contribution range.
+        status:
+          allOf:
+          - $ref: '#/components/schemas/BenefitStatus'
+          description: |-
+            `active`/`upcoming`/`inactive`.
+
+            * `active` - Active
+            * `upcoming` - Upcoming
+            * `open_enrollment` - Open Enrollment
+            * `inactive` - Inactive
+        coverage_start:
+          type: string
+          format: date
+          description: Coverage start.
+        coverage_end:
+          type: string
+          format: date
+          nullable: true
+          description: Coverage end.
+        open_enrollment_start:
+          type: string
+          format: date
+          description: Open-enrollment start.
+        open_enrollment_end:
+          type: string
+          format: date
+          nullable: true
+          description: Open-enrollment end.
+        offered_states:
+          type: array
+          items:
+            type: string
+          description: Distinct offered state codes.
+        is_current:
+          type: boolean
+          description: Whether this is the current plan year.
+        enrollment_rate:
+          allOf:
+          - $ref: '#/components/schemas/_EnrollmentRate'
+          description: Enrolled/eligible rate for this plan year.
+      required:
+      - benefit_id
+      - benefit_plan_year_id
+      - carrier
+      - coverage_end
+      - coverage_start
+      - employee_contribution
+      - employer_contribution
+      - enrollment_rate
+      - family
+      - is_current
+      - network_names
+      - offered_states
+      - open_enrollment_end
+      - open_enrollment_start
+      - premium_in_cents
+      - product_name
+      - status
+      - year
+    BenefitStatus:
+      enum:
+      - active
+      - upcoming
+      - open_enrollment
+      - inactive
+      type: string
+      description: |-
+        * `active` - Active
+        * `upcoming` - Upcoming
+        * `open_enrollment` - Open Enrollment
+        * `inactive` - Inactive
     BenefitSummary:
       type: object
       properties:
@@ -7790,7 +9548,7 @@ components:
           description: Prefixed entity ID to bind the token to (empr_* for employer, empl_* for employee)
         type:
           allOf:
-          - $ref: '#/components/schemas/Type16f'
+          - $ref: '#/components/schemas/BoundEntityType'
           description: |-
             Type of entity: 'employer' or 'employee'
 
@@ -7807,7 +9565,7 @@ components:
           description: Prefixed entity ID the token is bound to (empr_* or empl_*)
         type:
           allOf:
-          - $ref: '#/components/schemas/Type16f'
+          - $ref: '#/components/schemas/BoundEntityType'
           description: |-
             Type of bound entity
 
@@ -7816,6 +9574,14 @@ components:
       required:
       - id
       - type
+    BoundEntityType:
+      enum:
+      - employer
+      - employee
+      type: string
+      description: |-
+        * `employer` - employer
+        * `employee` - employee
     Category:
       enum:
       - Medical
@@ -8059,7 +9825,7 @@ components:
             * `Post-tax` - Post Tax
         frequency:
           allOf:
-          - $ref: '#/components/schemas/Frequency'
+          - $ref: '#/components/schemas/DeductionFrequency'
           description: |-
             Deduction frequency
 
@@ -8086,6 +9852,18 @@ components:
       - period_end_date
       - period_start_date
       - tax_classification
+    DeductionFrequency:
+      enum:
+      - weekly
+      - bi_weekly
+      - semi_monthly
+      - monthly
+      type: string
+      description: |-
+        * `weekly` - Weekly
+        * `bi_weekly` - Bi Weekly
+        * `semi_monthly` - Semi Monthly
+        * `monthly` - Monthly
     Employee:
       type: object
       properties:
@@ -8422,6 +10200,23 @@ components:
       - city
       - state
       - zipcode
+    EmployerBenefitPlanYearResponse:
+      type: object
+      description: Response containing a single employer benefit plan year resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/BenefitPlanYearDetail'
+      required:
+      - data
+    EmployerBenefitPlanYearsListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BenefitPlanYearList'
+      required:
+      - data
     EmployerContact:
       type: object
       description: Primary company-admin contact (email + phone; company admins have no person name).
@@ -8457,6 +10252,50 @@ components:
           $ref: '#/components/schemas/EmployerError'
       required:
       - error
+    EmployerHris:
+      type: object
+      properties:
+        hris:
+          allOf:
+          - $ref: '#/components/schemas/_HrisConnection'
+          nullable: true
+          description: HRIS connection details, or null when the employer has no integration.
+      required:
+      - hris
+    EmployerInvoicePdf:
+      type: object
+      properties:
+        download_url:
+          type: string
+          description: Time-limited Chargebee PDF download link for the invoice.
+      required:
+      - download_url
+    EmployerInvoicesListResponse:
+      type: object
+      description: 'Cursor-paginated invoices envelope: ``{ "data": [...], "pagination": { "next_offset": ... } }``.'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
+        pagination:
+          $ref: '#/components/schemas/_InvoicesCursorPagination'
+      required:
+      - data
+      - pagination
+    EmployerPayrollDeductionStatementListResponse:
+      type: object
+      description: Paginated list response containing employer payroll deduction statement resources.
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayrollDeductionStatement'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+      - data
+      - pagination
     EmployerResponse:
       type: object
       description: Response containing a single employer resource.
@@ -8470,7 +10309,7 @@ components:
       properties:
         pay_frequency:
           allOf:
-          - $ref: '#/components/schemas/EmployerSettingsPayFrequency'
+          - $ref: '#/components/schemas/DeductionFrequency'
           nullable: true
           description: |-
             Payroll deduction frequency. One of: weekly, bi_weekly, semi_monthly, monthly
@@ -8481,18 +10320,6 @@ components:
             * `monthly` - Monthly
       required:
       - pay_frequency
-    EmployerSettingsPayFrequency:
-      enum:
-      - weekly
-      - bi_weekly
-      - semi_monthly
-      - monthly
-      type: string
-      description: |-
-        * `weekly` - Weekly
-        * `bi_weekly` - Bi-Weekly
-        * `semi_monthly` - Semi-Monthly
-        * `monthly` - Monthly
     EmployerSettingsResponse:
       type: object
       description: Response containing a single employer settings resource.
@@ -8635,18 +10462,6 @@ components:
       - message
       - error
       - trace_id
-    Frequency:
-      enum:
-      - weekly
-      - bi_weekly
-      - semi_monthly
-      - monthly
-      type: string
-      description: |-
-        * `weekly` - Weekly
-        * `bi_weekly` - Bi Weekly
-        * `semi_monthly` - Semi Monthly
-        * `monthly` - Monthly
     Gender:
       enum:
       - Male
@@ -8862,6 +10677,30 @@ components:
       description: |-
         * `workos` - WorkOS
         * `vitable` - Vitable
+    Invoice:
+      type: object
+      properties:
+        invoice_id:
+          type: string
+          description: Chargebee invoice id (external id, not a prefixed UUID).
+        period:
+          type: string
+          nullable: true
+          description: Invoice date as an ISO string, or null.
+        total:
+          type: number
+          format: double
+          nullable: true
+          description: Invoice total in dollars, or null.
+        status:
+          type: string
+          nullable: true
+          description: Chargebee invoice status (e.g. `paid`), or null.
+      required:
+      - invoice_id
+      - period
+      - status
+      - total
     IssueAccessTokenRequest:
       type: object
       properties:
@@ -9327,6 +11166,63 @@ components:
           type: string
           nullable: true
           maxLength: 255
+    PayrollDeductionStatement:
+      type: object
+      description: |-
+        One payroll-deduction statement row.
+
+        Reads a :class:`PayrollDeductionStatementDTO` by attribute: the ``statement_id`` character field renders the
+        prefixed id via ``str()``, and the date/datetime fields emit ISO-8601 strings.
+      properties:
+        statement_id:
+          type: string
+          example: pstmt_abc123def456
+          description: Prefixed payroll-deduction-statement identifier (`pstmt_<base64-encoded-uuid>`).
+        period_start:
+          type: string
+          format: date
+          description: Deduction period start date.
+        period_end:
+          type: string
+          format: date
+          description: Deduction period end date.
+        run_date:
+          type: string
+          format: date-time
+          description: When the statement was generated.
+        employee_count:
+          type: integer
+          description: Distinct employees covered by the statement's entries.
+        total_deduction_cents:
+          type: integer
+          description: Total payroll deduction for the period, in cents.
+        csv_file_url:
+          type: string
+          nullable: true
+          description: Download link for the change CSV, or null.
+        deduction_frequency:
+          allOf:
+          - $ref: '#/components/schemas/DeductionFrequency'
+          description: |-
+            Deduction frequency code (e.g. `monthly`).
+
+            * `weekly` - Weekly
+            * `bi_weekly` - Bi Weekly
+            * `semi_monthly` - Semi Monthly
+            * `monthly` - Monthly
+        deduction_frequency_label:
+          type: string
+          description: Human-readable deduction frequency (e.g. `Monthly`).
+      required:
+      - csv_file_url
+      - deduction_frequency
+      - deduction_frequency_label
+      - employee_count
+      - period_end
+      - period_start
+      - run_date
+      - statement_id
+      - total_deduction_cents
     PersonaSummary:
       type: object
       properties:
@@ -9570,14 +11466,6 @@ components:
         * `Unknown` - Unknown
         * `Pre-tax` - Pre Tax
         * `Post-tax` - Post Tax
-    Type16f:
-      enum:
-      - employer
-      - employee
-      type: string
-      description: |-
-        * `employer` - employer
-        * `employee` - employee
     UpdateEmployerAddressInput:
       type: object
       properties:
@@ -9632,21 +11520,9 @@ components:
       type: object
       properties:
         pay_frequency:
-          $ref: '#/components/schemas/UpdateEmployerSettingsRequestPayFrequency'
+          $ref: '#/components/schemas/DeductionFrequency'
       required:
       - pay_frequency
-    UpdateEmployerSettingsRequestPayFrequency:
-      enum:
-      - weekly
-      - bi_weekly
-      - semi_monthly
-      - monthly
-      type: string
-      description: |-
-        * `weekly` - weekly
-        * `bi_weekly` - bi_weekly
-        * `semi_monthly` - semi_monthly
-        * `monthly` - monthly
     UserType923:
       enum:
       - Member
@@ -9778,6 +11654,34 @@ components:
       required:
       - as_of_date
       - stage
+    _ContributionRange:
+      type: object
+      properties:
+        min_cents:
+          type: integer
+          description: Lowest per-tier contribution in cents.
+        max_cents:
+          type: integer
+          description: Highest per-tier contribution in cents.
+      required:
+      - max_cents
+      - min_cents
+    _EnrollmentRate:
+      type: object
+      properties:
+        eligible:
+          type: integer
+          description: Employees eligible for this plan year.
+        enrolled:
+          type: integer
+          description: Employees enrolled in this plan year.
+        percentage:
+          type: integer
+          description: '``enrolled / eligible`` whole-number percent (0 when none).'
+      required:
+      - eligible
+      - enrolled
+      - percentage
     _EnrollmentRateSummary:
       type: object
       properties:
@@ -9794,6 +11698,29 @@ components:
       - eligible
       - enrolled
       - percentage
+    _HrisConnection:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: HRIS/payroll provider the employer is connected to (e.g. `Paychex`).
+        status:
+          type: string
+          description: Connection status reported by the integration.
+        last_sync_on:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the last sync completed, or null when none has.
+        synced_row_count:
+          type: integer
+          nullable: true
+          description: Rows in the latest completed sync, or null when none has.
+      required:
+      - last_sync_on
+      - provider
+      - status
+      - synced_row_count
     _HrisStatus:
       type: object
       properties:
@@ -9806,6 +11733,15 @@ components:
       required:
       - provider
       - status
+    _InvoicesCursorPagination:
+      type: object
+      properties:
+        next_offset:
+          type: string
+          nullable: true
+          description: Opaque JSON-encoded cursor for the next page; null when there are no more pages.
+      required:
+      - next_offset
     EmployeeId:
       type: string
       example: empl_abc123def456
@@ -9823,7 +11759,7 @@ components:
       default: 1
       example: 1
       description: 'Page number (default: 1)'
-    BenefitFamily:
+    BenefitFamilyParam:
       type: array
       items:
         enum:
@@ -9892,6 +11828,19 @@ components:
       type: string
       example: empr_abc123def456
       description: Unique employer identifier (empr_*)
+    BenefitPlanYearId:
+      type: string
+      example: plyr_abc123def456
+      description: Unique benefit-plan-year identifier (plyr_*).
+    Offset:
+      type: string
+      nullable: true
+      minLength: 1
+      description: Opaque cursor from a previous page's next_offset
+    InvoiceId:
+      type: string
+      example: INV-00042
+      description: External Chargebee invoice id (not a prefixed UUID).
     EnrollmentId:
       type: string
       example: enrl_abc123def456
