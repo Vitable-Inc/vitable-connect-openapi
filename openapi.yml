@@ -3718,6 +3718,284 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/{employer_id}/benefit-plan-years/{benefit_plan_year_id}/enrollments:
+    get:
+      operationId: list_employer_benefit_plan_year_enrollments
+      description: 'Returns a paginated list of every member with an enrollment in one of an employer''s plan years, any election status: what they elected, where their coverage stands, dependent count, carrier, plan, tier, and the plan''s total monthly cost. The caller must be authorized for the employer `empr_<...>`; an unknown or unauthorized employer, or an unknown plan year `plyr_<...>`, returns 404.'
+      summary: List a benefit plan year's enrollments
+      parameters:
+      - in: path
+        name: benefit_plan_year_id
+        schema:
+          $ref: '#/components/schemas/BenefitPlanYearId'
+        description: Unique benefit-plan-year identifier (plyr_*).
+        required: true
+      - in: query
+        name: election_status
+        schema:
+          $ref: '#/components/schemas/ElectionStatus'
+        description: Filter by election status. Repeat the parameter to match several.
+      - in: path
+        name: employer_id
+        schema:
+          $ref: '#/components/schemas/EmployerId'
+        description: Unique employer identifier (empr_*).
+        required: true
+      - in: query
+        name: limit
+        schema:
+          $ref: '#/components/schemas/Limit'
+        description: 'Items per page (default: 20, max: 100)'
+      - in: query
+        name: page
+        schema:
+          $ref: '#/components/schemas/Page'
+        description: 'Page number (default: 1)'
+      - in: query
+        name: search
+        schema:
+          $ref: '#/components/schemas/EmployerSearch'
+        description: Case-insensitive search. Matches member name partially, and the `member_id` exactly — either your own reference id or the prefixed `grpmbr_<...>` id.
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanYearEnrollmentListResponse'
+              examples:
+                PlanYearEnrollments:
+                  value:
+                    data:
+                    - member_id: mbr_SGVsbG8gV29ybGQh
+                      employee_id: empl_V2VsY29tZSB0byBBY21l
+                      employee_external_reference_id: EXT-10023
+                      member_first_name: Ada
+                      member_last_name: Lovelace
+                      election_status: Enrolled
+                      policy_status: Coverage Effective
+                      dependent_count: 1
+                      carrier: Vitable
+                      plan: Vitable Dental PPO
+                      tier: Employee Plus Spouse
+                      premium_in_cents: 12000
+                      employer_contribution_in_cents: 9000
+                      employee_deduction_in_cents: 3000
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 66
+                      total_pages: 4
+                  summary: Plan year enrollments
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/employers/{employer_id}/census-sync:
     post:
       operationId: create_census_sync
@@ -4010,7 +4288,7 @@ paths:
       - in: query
         name: search
         schema:
-          $ref: '#/components/schemas/Search'
+          $ref: '#/components/schemas/EmployeeSearch'
         description: Case-insensitive search across employee first name, last name, and email
       tags:
       - Employees
@@ -7397,18 +7675,20 @@ paths:
                     data:
                       id: mbr_abc123def456
                       name: Jane Doe
-                      date_of_birth: '1990-04-12'
-                      age: 36
-                      sex_at_birth: Female
+                      first_name: Jane
+                      last_name: Doe
+                      email: jane.doe@example.com
+                      phone: '4155550100'
                       address:
                         address_line_1: 123 Main Street
                         address_line_2: Apt 4B
                         city: San Francisco
                         state: CA
                         zipcode: '94102'
+                      date_of_birth: '1990-04-12'
+                      age: 36
+                      sex_at_birth: Female
                       preferred_language: en
-                      email: jane.doe@example.com
-                      phone: '4155550100'
                       tobacco_status: false
                       status: onboarded
                   summary: Member Detail
@@ -7855,6 +8135,512 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/members/{member_id}/employments:
+    get:
+      operationId: list_member_employments
+      description: Lists a member's employment across every employer — the same employee record shape as the employer's employees list, plus the employer name. For an organization caller the rows are scoped to companies in that organization's book; a member (self/household) or Vitable Admin sees all employments. A member not visible to the caller returns a 404.
+      summary: List member employments
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          $ref: '#/components/schemas/MemberId'
+        required: true
+      tags:
+      - Members
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberEmploymentsResponse'
+              examples:
+                MemberEmployments:
+                  value:
+                    data:
+                    - id: empl_abc123def456
+                      member_id: mbr_abc123def456
+                      employer_name: Acme Corp
+                      first_name: Jane
+                      last_name: Doe
+                      employee_class: full_time
+                      status: active
+                      start_date: '2024-01-15'
+                      termination_date: null
+                      compensation_type: salary
+                  summary: Member Employments
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/members/{member_id}/enrollments:
+    get:
+      operationId: list_member_enrollments
+      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, coverage window, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
+      summary: List member enrollments
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          $ref: '#/components/schemas/MemberId'
+        required: true
+      tags:
+      - Members
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberEnrollmentsResponse'
+              examples:
+                MemberEnrollments:
+                  value:
+                    data:
+                    - benefit_type: Medical
+                      product_code: MEC_PLUS
+                      product_name: MEC Plus
+                      employer_name: Acme Corp
+                      carrier_name: Vitable
+                      plan_name: MEC Plus Standard
+                      tier_name: Employee Only
+                      employee_deduction_in_cents: 5000
+                      employer_contribution_in_cents: 25000
+                      premium_in_cents: 30000
+                      coverage_start: '2026-04-01'
+                      coverage_end: null
+                      enrollment_window_start: '2026-03-01'
+                      enrollment_window_end: '2026-03-31'
+                      election_status: Enrolled
+                      policy_status: Coverage Effective
+                    - benefit_type: Dental
+                      product_code: VD
+                      product_name: Vitable Dental
+                      employer_name: Acme Corp
+                      carrier_name: Vitable
+                      plan_name: null
+                      tier_name: null
+                      employee_deduction_in_cents: null
+                      employer_contribution_in_cents: null
+                      premium_in_cents: null
+                      coverage_start: null
+                      coverage_end: null
+                      enrollment_window_start: '2026-03-01'
+                      enrollment_window_end: '2026-03-31'
+                      election_status: Waived
+                      policy_status: null
+                  summary: Member Enrollments
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/members/{member_id}/household:
     get:
       operationId: get_member_household
@@ -7893,6 +8679,286 @@ paths:
                       date_of_birth: '1989-02-03'
                       household_admin_in: false
                   summary: Member Household
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/members/{member_id}/id-cards:
+    get:
+      operationId: list_member_id_cards
+      description: Lists a member's benefit ID cards — card type (medical, dental, vision, or rx), employer, plan, provider network, claims payer, carrier contact details, and the disclaimers printed on the card. Medical, dental and vision cards come from the member's active digital benefit cards; the rx card from the member's Ventegra pharmacy benefit (omitted when the member has no free-medication coverage), which carries no plan, network, or carrier details. Access is scoped to the authenticated principal, and an organization caller sees only cards from employers in its book; a member not visible to the caller returns a 404.
+      summary: List member ID cards
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          $ref: '#/components/schemas/MemberId'
+        required: true
+      tags:
+      - Members
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDigitalBenefitCardsResponse'
+              examples:
+                MemberIDCards:
+                  value:
+                    data:
+                    - card_type: medical
+                      group_id: GRP-000123
+                      group_member_id: GM-000456
+                      member_name: Jane Doe
+                      employer_name: Acme Inc.
+                      plan_name: MEC Plus Standard
+                      benefit_code: MEC_PLUS
+                      network:
+                        id: 5f1c1f9e-6d4a-4b21-9f77-2d4c8f0a1b33
+                        name: First Health
+                        logo: https://assets.vitablehealth.com/networks/first-health.png
+                        address:
+                          address_line_1: 123 Main Street
+                          address_line_2: null
+                          city: San Francisco
+                          state: CA
+                          zipcode: '94102'
+                        edi: '87726'
+                        website: https://firsthealth.example.com
+                        phone: (800) 555-0100
+                        member_website: https://firsthealth.example.com/members
+                        member_phone: (800) 555-0101
+                        provider_website: https://firsthealth.example.com/providers
+                        provider_phone: (800) 555-0102
+                      claims_payer_display_name: Vitable Health
+                      carrier_phone: (800) 555-0100
+                      carrier_website: https://vitablehealth.com
+                      plan_disclaimer: This plan is not major medical insurance.
+                      general_disclaimer: Possession of this card does not guarantee coverage.
+                      nsa_table:
+                      - - Primary care
+                        - $0
+                      - - Specialist
+                        - $40
+                    - card_type: rx
+                      group_id: TEST125
+                      group_member_id: RX-000789
+                      member_name: Jane Doe
+                      employer_name: Acme Inc.
+                      plan_name: null
+                      benefit_code: null
+                      network: null
+                      claims_payer_display_name: null
+                      carrier_phone: null
+                      carrier_website: null
+                      plan_disclaimer: null
+                      general_disclaimer: null
+                      nsa_table: []
+                  summary: Member ID Cards
           description: ''
           headers:
             X-RateLimit-Limit:
@@ -9585,6 +10651,264 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v2/members:
+    get:
+      operationId: list_members
+      description: Retrieves a paginated list of the members in the authenticated organization's book — identity, contact details, and address. Supports free-text search (name, email, or exact member id).
+      summary: List members
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          $ref: '#/components/schemas/Limit'
+        description: 'Items per page (default: 20, max: 100)'
+      - in: query
+        name: page
+        schema:
+          $ref: '#/components/schemas/Page'
+        description: 'Page number (default: 1)'
+      - in: query
+        name: search
+        schema:
+          $ref: '#/components/schemas/MemberSearch'
+        description: Case-insensitive search across member name and email; exact match on member id
+      tags:
+      - Members
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberListResponse'
+              examples:
+                MembersList:
+                  value:
+                    data:
+                    - id: mbr_abc123def456
+                      first_name: Jane
+                      last_name: Doe
+                      email: jane.doe@example.com
+                      phone: '4155550100'
+                      address:
+                        address_line_1: 123 Main Street
+                        address_line_2: Apt 4B
+                        city: San Francisco
+                        state: CA
+                        zipcode: '94102'
+                    pagination:
+                      page: 1
+                      limit: 20
+                      total: 1
+                      total_pages: 1
+                  summary: Members List
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     AccessTokenResponse:
@@ -9721,6 +11045,58 @@ components:
         * `vpc` - Vpc
         * `dental` - Dental
         * `vision` - Vision
+    BenefitPlanNetwork:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          description: Name of the network
+          maxLength: 256
+        logo:
+          type: string
+          nullable: true
+        address:
+          $ref: '#/components/schemas/Address'
+        edi:
+          type: string
+          nullable: true
+          description: Network's EDI
+          maxLength: 128
+        website:
+          type: string
+          description: Website of the network
+          maxLength: 256
+        phone:
+          type: string
+        member_website:
+          type: string
+          nullable: true
+          description: Website for members
+          maxLength: 256
+        member_phone:
+          type: string
+          nullable: true
+        provider_website:
+          type: string
+          nullable: true
+          description: Website for providers
+          maxLength: 256
+        provider_phone:
+          type: string
+          nullable: true
+      required:
+      - address
+      - id
+      - logo
+      - member_phone
+      - name
+      - phone
+      - provider_phone
+      - website
     BenefitPlanYearDetail:
       type: object
       description: |-
@@ -10061,6 +11437,18 @@ components:
       description: |-
         * `employer` - employer
         * `employee` - employee
+    CardType:
+      enum:
+      - medical
+      - dental
+      - vision
+      - rx
+      type: string
+      description: |-
+        * `medical` - medical
+        * `dental` - dental
+        * `vision` - vision
+        * `rx` - rx
     Category:
       enum:
       - Medical
@@ -10389,6 +11777,97 @@ components:
         * `bi_weekly` - Bi Weekly
         * `semi_monthly` - Semi Monthly
         * `monthly` - Monthly
+    DigitalBenefitCard:
+      type: object
+      description: Wire serializer for :class:`DigitalBenefitCardDTO` (one benefit ID card).
+      properties:
+        card_type:
+          allOf:
+          - $ref: '#/components/schemas/CardType'
+          description: |-
+            Kind of card: medical, dental, vision, or rx
+
+            * `medical` - medical
+            * `dental` - dental
+            * `vision` - vision
+            * `rx` - rx
+        group_id:
+          type: string
+          description: Group number printed on the card (the rx group id for an rx card)
+        group_member_id:
+          type: string
+          description: Member id printed on the card (the Ventegra cardholder id for an rx card)
+        member_name:
+          type: string
+          description: Name of the member the card is issued to
+        employer_name:
+          type: string
+          nullable: true
+          description: Employer the card's coverage is through; null for an rx card without group info
+        plan_name:
+          type: string
+          nullable: true
+          description: Benefit plan name on the card; null for a consumer-membership rx card
+        benefit_code:
+          allOf:
+          - $ref: '#/components/schemas/ProductCode'
+          nullable: true
+          description: |-
+            Benefit code backing the card; null for a consumer-membership rx card, which has no enrollment
+
+            * `EBA` - Eba Mec
+            * `VPC` - Vpc Enhanced
+            * `VPC_CORE` - Vpc Core
+            * `MEC` - Vpc Mec
+            * `MEC2` - Mec2
+            * `MEC_PLUS` - Mec Plus
+            * `MVP` - Mvp
+            * `MVP2` - Mvp2
+            * `MVPSL` - Mvpsl
+            * `MVPSL2` - Mvpsl2
+            * `VD` - Dental
+            * `VV` - Vision
+            * `ICHRA` - Ichra
+            * `ICHRA_PREMIUM_PLUS` - Ichra Premium Plus
+            * `ICHRA_REIMBURSEMENT_ONLY` - Ichra Reimbursement Only
+        network:
+          allOf:
+          - $ref: '#/components/schemas/BenefitPlanNetwork'
+          nullable: true
+          description: Provider network shown on the card; null for an rx card
+        claims_payer_display_name:
+          type: string
+          nullable: true
+          description: Claims payer shown on the card
+        carrier_phone:
+          type: string
+          nullable: true
+          description: Carrier phone number on the card; null for an rx card
+        carrier_website:
+          type: string
+          nullable: true
+          description: Carrier website on the card; null for an rx card
+        plan_disclaimer:
+          type: string
+          nullable: true
+          description: Plan-specific disclaimer text; null for an rx card
+        general_disclaimer:
+          type: string
+          nullable: true
+          description: General disclaimer text; null for an rx card
+        nsa_table:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+          description: No Surprises Act cost-sharing table rendered on the card; empty for an rx card
+      required:
+      - card_type
+      - group_id
+      - group_member_id
+      - member_name
+      - nsa_table
     EligibilityRuleCompensationType:
       enum:
       - Salary
@@ -10432,6 +11911,10 @@ components:
           type: string
           nullable: true
           description: Partner-assigned reference ID for the employee
+        employer_name:
+          type: string
+          nullable: true
+          description: Name of the employer this employment is with
         first_name:
           type: string
           description: Employee's legal first name
@@ -11433,14 +12916,35 @@ components:
       - last_name
     Member:
       type: object
-      description: Wire serializer for :class:`MemberDTO` (DTO -> response body).
+      description: 'A member''s profile: identity, contact details, address, demographics, and onboarding status.'
       properties:
         id:
           type: string
           readOnly: true
           description: Unique member identifier with 'mbr_' prefix
+        first_name:
+          type: string
+          description: Member's legal first name
+        last_name:
+          type: string
+          description: Member's legal last name
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: Email address
+        phone:
+          type: string
+          nullable: true
+          description: Phone number (10-digit US domestic string)
+        address:
+          allOf:
+          - $ref: '#/components/schemas/MemberAddress'
+          nullable: true
+          description: Member's residential address
         name:
           type: string
+          readOnly: true
           description: Member's full name
         date_of_birth:
           type: string
@@ -11453,24 +12957,10 @@ components:
           type: string
           nullable: true
           description: Sex assigned at birth, if provided
-        address:
-          allOf:
-          - $ref: '#/components/schemas/MemberAddress'
-          nullable: true
-          description: Member's residential address
         preferred_language:
           type: string
           nullable: true
           description: Member's preferred language code (e.g., en, es)
-        email:
-          type: string
-          format: email
-          nullable: true
-          description: Email address
-        phone:
-          type: string
-          nullable: true
-          description: Phone number (10-digit US domestic string)
         tobacco_status:
           type: boolean
           nullable: true
@@ -11483,7 +12973,9 @@ components:
       required:
       - age
       - date_of_birth
+      - first_name
       - id
+      - last_name
       - name
       - status
     MemberAddress:
@@ -11518,6 +13010,148 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MemberLegalDependent'
+      required:
+      - data
+    MemberDigitalBenefitCardsResponse:
+      type: object
+      description: 'Unpaginated ``{"data": [...]}`` list of member digital benefit cards.'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DigitalBenefitCard'
+      required:
+      - data
+    MemberEmploymentsResponse:
+      type: object
+      description: 'Unpaginated ``{"data": [...]}`` list of member employments.'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+      required:
+      - data
+    MemberEnrollment:
+      type: object
+      description: Wire serializer for :class:`MemberEnrollmentDTO` (one benefit enrollment row).
+      properties:
+        benefit_type:
+          allOf:
+          - $ref: '#/components/schemas/Category'
+          description: |-
+            High-level benefit grouping (e.g., Medical, Dental)
+
+            * `Medical` - Medical
+            * `Dental` - Dental
+            * `Vision` - Vision
+            * `Hospital` - Hospital
+        product_code:
+          allOf:
+          - $ref: '#/components/schemas/ProductCode'
+          description: |-
+            The benefit product this enrollment is for
+
+            * `EBA` - Eba Mec
+            * `VPC` - Vpc Enhanced
+            * `VPC_CORE` - Vpc Core
+            * `MEC` - Vpc Mec
+            * `MEC2` - Mec2
+            * `MEC_PLUS` - Mec Plus
+            * `MVP` - Mvp
+            * `MVP2` - Mvp2
+            * `MVPSL` - Mvpsl
+            * `MVPSL2` - Mvpsl2
+            * `VD` - Dental
+            * `VV` - Vision
+            * `ICHRA` - Ichra
+            * `ICHRA_PREMIUM_PLUS` - Ichra Premium Plus
+            * `ICHRA_REIMBURSEMENT_ONLY` - Ichra Reimbursement Only
+        product_name:
+          type: string
+          description: Display name of the benefit product
+        employer_name:
+          type: string
+          description: Name of the employer the enrollment is through
+        carrier_name:
+          type: string
+          nullable: true
+          description: Insurance carrier name; null when no active carrier period is resolvable
+        plan_name:
+          type: string
+          nullable: true
+          description: Chosen benefit plan name; null unless the row is an election
+        tier_name:
+          type: string
+          nullable: true
+          description: Chosen benefit plan tier name (e.g., Employee Only); null unless the row is an election
+        employee_deduction_in_cents:
+          type: integer
+          nullable: true
+          description: Employee monthly payroll deduction in cents; null unless the row is an election
+        employer_contribution_in_cents:
+          type: integer
+          nullable: true
+          description: Employer monthly contribution in cents; null unless the row is an election
+        premium_in_cents:
+          type: integer
+          nullable: true
+          description: Total monthly plan premium in cents; null unless the row is an election
+        coverage_start:
+          type: string
+          format: date
+          nullable: true
+          description: Coverage window start date (YYYY-MM-DD)
+        coverage_end:
+          type: string
+          format: date
+          nullable: true
+          description: Coverage window end date (YYYY-MM-DD); null while coverage is open-ended
+        enrollment_window_start:
+          type: string
+          format: date
+          description: Enrollment / open-enrollment window start date (YYYY-MM-DD)
+        enrollment_window_end:
+          type: string
+          format: date
+          nullable: true
+          description: Enrollment / open-enrollment window end date (YYYY-MM-DD); null when open-ended
+        election_status:
+          allOf:
+          - $ref: '#/components/schemas/PlanYearEnrollmentElectionStatus'
+          description: |-
+            Where the member stands: `Enrolled` or `Waived` if they answered, otherwise `Pending` while their enrollment window is open and `Expired` once it has closed.
+
+            * `Enrolled` - Enrolled
+            * `Waived` - Waived
+            * `Pending` - Pending
+            * `Expired` - Expired
+        policy_status:
+          allOf:
+          - $ref: '#/components/schemas/PlanYearEnrollmentPolicyStatus'
+          nullable: true
+          description: |-
+            Where the member's coverage stands: `Coverage Upcoming`, `Coverage Effective`, or `Coverage Ended`. Null unless the member enrolled.
+
+            * `Coverage Upcoming` - Coverage Upcoming
+            * `Coverage Effective` - Coverage Effective
+            * `Coverage Ended` - Coverage Ended
+      required:
+      - benefit_type
+      - election_status
+      - employer_name
+      - enrollment_window_start
+      - policy_status
+      - product_code
+      - product_name
+    MemberEnrollmentsResponse:
+      type: object
+      description: 'Unpaginated ``{"data": [...]}`` list of member enrollments.'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberEnrollment'
       required:
       - data
     MemberLegalDependent:
@@ -11572,6 +13206,51 @@ components:
       - member_id
       - primary_member_id
       - relationship
+    MemberListItem:
+      type: object
+      description: 'A member in the organization''s directory: identity, contact details, address, and join date.'
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: Unique member identifier with 'mbr_' prefix
+        first_name:
+          type: string
+          description: Member's legal first name
+        last_name:
+          type: string
+          description: Member's legal last name
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: Email address
+        phone:
+          type: string
+          nullable: true
+          description: Phone number (10-digit US domestic string)
+        address:
+          allOf:
+          - $ref: '#/components/schemas/MemberAddress'
+          nullable: true
+          description: Member's residential address
+      required:
+      - first_name
+      - id
+      - last_name
+    MemberListResponse:
+      type: object
+      description: Paginated list response containing member resources.
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberListItem'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+      - data
+      - pagination
     MemberResponse:
       type: object
       description: Response containing a single member resource.
@@ -11951,6 +13630,123 @@ components:
       required:
       - data
       - pagination
+    PlanYearEnrollment:
+      type: object
+      properties:
+        member_id:
+          type: string
+          description: Our id for the person (`mbr_<...>`). Stable across every employer they work for.
+        employee_id:
+          type: string
+          description: Our id for this person's employment with this employer (`empl_<...>`). A person who leaves and is rehired has two.
+        employee_external_reference_id:
+          type: string
+          nullable: true
+          description: Your own reference id for this employee, as you supplied it. Null when you have not set one.
+        member_first_name:
+          type: string
+          description: The member's first name.
+        member_last_name:
+          type: string
+          description: The member's last name.
+        election_status:
+          allOf:
+          - $ref: '#/components/schemas/PlanYearEnrollmentElectionStatus'
+          description: |-
+            Where the member stands: `Enrolled` or `Waived` if they answered, otherwise `Pending` while their enrollment window is open and `Expired` once it has closed.
+
+            * `Enrolled` - Enrolled
+            * `Waived` - Waived
+            * `Pending` - Pending
+            * `Expired` - Expired
+        policy_status:
+          allOf:
+          - $ref: '#/components/schemas/PlanYearEnrollmentPolicyStatus'
+          nullable: true
+          description: |-
+            Where the member's coverage stands: `Coverage Upcoming`, `Coverage Effective`, or `Coverage Ended`. Null unless the member enrolled.
+
+            * `Coverage Upcoming` - Coverage Upcoming
+            * `Coverage Effective` - Coverage Effective
+            * `Coverage Ended` - Coverage Ended
+        dependent_count:
+          type: integer
+          minimum: 0
+          description: Dependents covered under this enrollment today. Counts the same dependents `premium_in_cents` is priced for, so a dependent whose termination is dated in the future still counts.
+        carrier:
+          type: string
+          nullable: true
+          description: 'The carrier for this enrollment: the individual-market carrier for an ICHRA plan, otherwise the benefit''s own. Null when the benefit has no carrier.'
+        plan:
+          type: string
+          nullable: true
+          description: Chosen plan name, or null when unanswered/waived.
+        tier:
+          type: string
+          nullable: true
+          description: Chosen coverage tier, or null when unanswered/waived.
+        premium_in_cents:
+          type: integer
+          nullable: true
+          description: Monthly premium in cents for the chosen plan, dependents included. The plan's own cost, not the employer's share of it. Null when unanswered/waived.
+        employer_contribution_in_cents:
+          type: integer
+          nullable: true
+          description: The employer's monthly share of `premium_in_cents`, in cents. Null when unanswered/waived.
+        employee_deduction_in_cents:
+          type: integer
+          nullable: true
+          description: 'What the employee is deducted monthly, in cents: `premium_in_cents` less `employer_contribution_in_cents`, floored at zero. Null when unanswered/waived.'
+      required:
+      - carrier
+      - dependent_count
+      - election_status
+      - employee_deduction_in_cents
+      - employee_external_reference_id
+      - employee_id
+      - employer_contribution_in_cents
+      - member_first_name
+      - member_id
+      - member_last_name
+      - plan
+      - policy_status
+      - premium_in_cents
+      - tier
+    PlanYearEnrollmentElectionStatus:
+      enum:
+      - Enrolled
+      - Waived
+      - Pending
+      - Expired
+      type: string
+      description: |-
+        * `Enrolled` - Enrolled
+        * `Waived` - Waived
+        * `Pending` - Pending
+        * `Expired` - Expired
+    PlanYearEnrollmentListResponse:
+      type: object
+      description: Paginated list response containing plan year enrollment resources.
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanYearEnrollment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+      - data
+      - pagination
+    PlanYearEnrollmentPolicyStatus:
+      enum:
+      - Coverage Upcoming
+      - Coverage Effective
+      - Coverage Ended
+      type: string
+      description: |-
+        * `Coverage Upcoming` - Coverage Upcoming
+        * `Coverage Effective` - Coverage Effective
+        * `Coverage Ended` - Coverage Ended
     ProductCode:
       enum:
       - EBA
@@ -12796,6 +14592,23 @@ components:
       type: string
       example: plyr_abc123def456
       description: Unique benefit-plan-year identifier (plyr_*).
+    ElectionStatus:
+      type: array
+      items:
+        type: string
+        enum:
+        - Enrolled
+        - Expired
+        - Pending
+        - Waived
+      description: Filter by election status. Repeat the parameter to match several.
+    EmployerSearch:
+      type: string
+      description: Case-insensitive search. Matches member name partially, and the `member_id` exactly — either your own reference id or the prefixed `grpmbr_<...>` id.
+    EmployeeSearch:
+      type: string
+      example: jane
+      description: Case-insensitive search across employee first name, last name, and email
     Offset:
       type: string
       nullable: true
@@ -12872,6 +14685,9 @@ components:
         * `payroll_deduction` - Payroll Deduction
     EventId:
       type: string
+    MemberSearch:
+      type: string
+      description: Case-insensitive search across member name and email; exact match on member id
     PersonaSummaryList:
       type: array
       items:
@@ -12907,5 +14723,7 @@ tags:
   description: Record life events that trigger special enrollment periods
 - name: Enrollments
   description: Manage benefit enrollments and elections for employees
+- name: Members
+  description: Browse the members covered across your book and read a member's profile
 security:
 - APIKeyAuth: []
