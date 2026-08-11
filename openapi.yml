@@ -263,7 +263,7 @@ paths:
   /v1/auth/complete-profile:
     post:
       operationId: complete_profile
-      description: 'Collects the required profile fields (first_name, last_name, phone) for a verified IdP identity and provisions the asclepius user: creates the BaseUser (of the app-context''s user_type, with the real phone) + the OrganizationUser persona (name). An optional `user_type` narrows provisioning/resolution to a single persona type. When a same-email account already exists (verified email) it links + finishes that account instead. Returns the auth session. Domain failures surface as the normalized error envelope with an `app_error_code`: 403 `email_verification_required` / `user_type_not_allowed`; 409 `identity_conflict` / `phone_in_use` / `needs_selection` (fetch candidates via `/personas`); 422 `invalid_phone`.'
+      description: 'Collects the required profile fields (first_name, last_name, phone) for a verified IdP identity and provisions the asclepius user: creates the BaseUser (of the app-context''s user_type, with the real phone) + the OrganizationUser persona (name). An optional `user_type` narrows provisioning/resolution to a single persona type. When a same-email account already exists (verified email) it links + finishes that account instead. Returns the auth session. Domain failures surface as the normalized error envelope with an `app_error_code`: 403 `email_verification_required` / `user_type_not_allowed`; 409 `identity_conflict` / `needs_selection` (fetch candidates via `/personas`); 422 `invalid_phone`.'
       summary: Complete profile (provision the asclepius user)
       tags:
       - Auth
@@ -349,7 +349,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: '`phone_in_use`, `identity_conflict`, or `needs_selection` (multiple personas — fetch via `/personas`).'
+          description: '`identity_conflict` or `needs_selection` (multiple personas — fetch via `/personas`).'
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -13312,6 +13312,7 @@ components:
           format: date
         phone:
           type: string
+          nullable: true
         plan_id:
           type: string
           maxLength: 255
@@ -13327,7 +13328,6 @@ components:
       - date_of_birth
       - first_name
       - last_name
-      - phone
       - plan_id
       - reference_id
     GroupMemberSyncRequest:
