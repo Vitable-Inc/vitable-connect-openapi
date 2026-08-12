@@ -12212,6 +12212,8 @@ components:
           format: email
         phone:
           type: string
+          nullable: true
+          description: Phone number
         address:
           allOf:
           - $ref: '#/components/schemas/CensusSyncEmployeeAddressRequest'
@@ -12233,7 +12235,6 @@ components:
       - email
       - first_name
       - last_name
-      - phone
     CensusSyncRequest:
       type: object
       properties:
