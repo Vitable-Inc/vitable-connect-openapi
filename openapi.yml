@@ -9872,6 +9872,7 @@ paths:
                       type: BROKERAGE
                       idp_org_id: org_01J0WORKOS
                       idp_provider: workos
+                      super_in: false
                     total: 1
                   summary: My Organizations
           description: ''
@@ -10116,6 +10117,7 @@ paths:
                     type: BROKERAGE
                     idp_org_id: org_01J0WORKOS
                     idp_provider: workos
+                    super_in: false
                   summary: Created Organization
           description: ''
           headers:
@@ -11337,7 +11339,7 @@ paths:
   /v2/members:
     get:
       operationId: list_members
-      description: Retrieves a paginated list of the members in the authenticated organization's book — identity, contact details, and address. Supports free-text search (name, email, or exact member id).
+      description: Retrieves a paginated list of the members in the authenticated organization's book — identity, contact details, and address. The book covers members reached through an employer in the organization's book as well as members of a group it owns. Supports free-text search (name, email, or exact member id).
       summary: List members
       parameters:
       - in: query
@@ -14023,11 +14025,15 @@ components:
 
             * `workos` - WorkOS
             * `vitable` - Vitable
+        super_in:
+          type: boolean
+          description: Whether this organization reads across every organization.
       required:
       - id
       - idp_org_id
       - idp_provider
       - name
+      - super_in
       - type
     OrganizationEmployer:
       type: object
