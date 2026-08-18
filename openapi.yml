@@ -2159,7 +2159,7 @@ paths:
   /v1/employers:
     get:
       operationId: list_employers
-      description: Returns the caller's organization book — every employer with its computed columns (enrollment-rate summary, benefit-family tags, HRIS connection, benefit-lifecycle stage) merged with the employer's flat CRM fields (legal name, EIN, contact, address, timestamps). The organization is derived from the authenticated principal. Supports name search, benefit-family/lifecycle/HRIS filters, and page/limit pagination.
+      description: 'Returns the caller''s employer book — every employer with its computed columns (enrollment-rate summary, benefit-family tags, HRIS connection, benefit-lifecycle stage) merged with the employer''s flat CRM fields (legal name, EIN, contact, address, timestamps). The book is derived from the authenticated principal: one organization''s employers, or every organization''s for a caller whose reach is not a single organization. Supports name search, benefit-family/lifecycle/HRIS filters, and page/limit pagination.'
       summary: List employers
       parameters:
       - in: query
@@ -2172,6 +2172,11 @@ paths:
         schema:
           $ref: '#/components/schemas/BenefitLifecycleStage'
         description: Filter to employers in one of these computed benefit-lifecycle stages.
+      - in: query
+        name: hris_provider
+        schema:
+          $ref: '#/components/schemas/HrisProvider'
+        description: Filter to employers whose HRIS connection is with one of these payroll providers (e.g. `ADP RUN`). Matched case-insensitively; free text, so read the available values from the HRIS-providers endpoint rather than assuming a fixed set.
       - in: query
         name: hris_status
         schema:
@@ -6527,6 +6532,234 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/employers/hris-providers:
+    get:
+      operationId: list_employer_hris_providers
+      description: Returns the distinct HRIS/payroll providers across the same book `GET /v1/employers` returns, sorted for display. Use these as the values for the employers list's `hris_provider` filter — the providers are free text, so they cannot be enumerated in advance.
+      summary: List HRIS providers
+      tags:
+      - Employers
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationHrisProvidersResponse'
+              examples:
+                HRISProviders:
+                  value:
+                    data:
+                    - provider: ADP RUN
+                    - provider: Paychex
+                  summary: HRIS Providers
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/enrollments/{enrollment_id}:
     get:
       operationId: get_enrollment
@@ -9063,7 +9296,7 @@ paths:
   /v1/members/{member_id}/enrollments:
     get:
       operationId: list_member_enrollments
-      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, coverage window, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
+      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID that can be used to target enrollment actions. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
       summary: List member enrollments
       parameters:
       - in: path
@@ -9085,7 +9318,8 @@ paths:
                 MemberEnrollments:
                   value:
                     data:
-                    - benefit_type: Medical
+                    - id: enrl_AAAAAAAAAAAAAAAAAAAAAQ
+                      benefit_type: Medical
                       product_code: MEC_PLUS
                       product_name: MEC Plus
                       employer_name: Acme Corp
@@ -9096,12 +9330,14 @@ paths:
                       employer_contribution_in_cents: 25000
                       premium_in_cents: 30000
                       coverage_start: '2026-04-01'
-                      coverage_end: null
+                      coverage_end: '2026-08-31'
+                      plan_year_coverage_end: '2026-12-31'
                       enrollment_window_start: '2026-03-01'
                       enrollment_window_end: '2026-03-31'
                       election_status: Enrolled
                       policy_status: Coverage Effective
-                    - benefit_type: Dental
+                    - id: enrl_AAAAAAAAAAAAAAAAAAAAAg
+                      benefit_type: Dental
                       product_code: VD
                       product_name: Vitable Dental
                       employer_name: Acme Corp
@@ -9113,6 +9349,7 @@ paths:
                       premium_in_cents: null
                       coverage_start: null
                       coverage_end: null
+                      plan_year_coverage_end: '2026-12-31'
                       enrollment_window_start: '2026-03-01'
                       enrollment_window_end: '2026-03-31'
                       election_status: Waived
@@ -13746,6 +13983,10 @@ components:
       type: object
       description: Wire serializer for :class:`MemberEnrollmentDTO` (one benefit enrollment row).
       properties:
+        id:
+          type: string
+          example: enrl_AAAAAAAAAAAAAAAAAAAAAQ
+          description: Opaque, stable enrollment identifier used to target enrollment actions
         benefit_type:
           allOf:
           - $ref: '#/components/schemas/Category'
@@ -13817,6 +14058,11 @@ components:
           format: date
           nullable: true
           description: Coverage window end date (YYYY-MM-DD); null while coverage is open-ended
+        plan_year_coverage_end:
+          type: string
+          format: date
+          nullable: true
+          description: Benefit plan-year coverage end date (YYYY-MM-DD), distinct from this enrollment's coverage_end; null when the plan year is open-ended
         enrollment_window_start:
           type: string
           format: date
@@ -13851,6 +14097,8 @@ components:
       - election_status
       - employer_name
       - enrollment_window_start
+      - id
+      - plan_year_coverage_end
       - policy_status
       - product_code
       - product_name
@@ -14137,6 +14385,24 @@ components:
       required:
       - data
       - pagination
+    OrganizationHrisProvider:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: HRIS/payroll provider name, as stored on the connection (e.g. `ADP RUN`).
+      required:
+      - provider
+    OrganizationHrisProvidersResponse:
+      type: object
+      description: 'Unpaginated ``{"data": [...]}`` list of organization hris providers.'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationHrisProvider'
+      required:
+      - data
     OrganizationType:
       enum:
       - BROKERAGE
@@ -15411,6 +15677,12 @@ components:
           * `cancelled` - cancelled
       default: []
       description: Filter to employers in one of these computed benefit-lifecycle stages.
+    HrisProvider:
+      type: array
+      items:
+        type: string
+      default: []
+      description: Filter to employers whose HRIS connection is with one of these payroll providers (e.g. `ADP RUN`). Matched case-insensitively; free text, so read the available values from the HRIS-providers endpoint rather than assuming a fixed set.
     HrisStatus:
       type: array
       items:
