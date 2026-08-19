@@ -13648,6 +13648,10 @@ components:
           type: string
           readOnly: true
           description: Unique member identifier with 'mbr_' prefix
+        employer_id:
+          type: string
+          readOnly: true
+          description: Unique identifier of the employer this employment is with (empr_*)
         reference_id:
           type: string
           nullable: true
@@ -13753,6 +13757,7 @@ components:
       - deductions
       - email
       - employee_class
+      - employer_id
       - first_name
       - id
       - last_name
