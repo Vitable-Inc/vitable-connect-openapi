@@ -2241,7 +2241,8 @@ paths:
                       - MEC
                       - ICHRA
                       hris_status:
-                        provider: Paychex
+                        provider: paychex_flex
+                        provider_label: Paychex Flex
                         status: Active
                       benefit_lifecycle_stage:
                         stage: active
@@ -4597,13 +4598,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmployerHris'
+                $ref: '#/components/schemas/EmployerHrisResponse'
               examples:
                 EmployerHRISConnection:
                   value:
                     data:
                       hris:
-                        provider: Paychex
+                        provider: paychex_flex
+                        provider_label: Paychex Flex
                         status: connected
                         last_sync_on: '2026-05-01T00:00:00Z'
                         synced_row_count: 84
@@ -5112,7 +5114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EmployerInvoicePdf'
+                $ref: '#/components/schemas/EmployerInvoicePdfResponse'
               examples:
                 EmployerInvoicePDF:
                   value:
@@ -6535,7 +6537,7 @@ paths:
   /v1/employers/hris-providers:
     get:
       operationId: list_employer_hris_providers
-      description: Returns the distinct HRIS/payroll providers across the same book `GET /v1/employers` returns, sorted for display. Use these as the values for the employers list's `hris_provider` filter — the providers are free text, so they cannot be enumerated in advance.
+      description: Returns the distinct HRIS/payroll providers across the same book `GET /v1/employers` returns, sorted for display. Use these as the values for the employers list's `hris_provider` filter — filter on `provider`, show `provider_label`. The stored providers are free text, so they cannot be enumerated in advance.
       summary: List HRIS providers
       tags:
       - Employers
@@ -6551,8 +6553,10 @@ paths:
                 HRISProviders:
                   value:
                     data:
-                    - provider: ADP RUN
-                    - provider: Paychex
+                    - provider: adp_run
+                      provider_label: ADP Run
+                    - provider: paychex_flex
+                      provider_label: Paychex Flex
                   summary: HRIS Providers
           description: ''
           headers:
@@ -9830,7 +9834,7 @@ paths:
   /v1/members/{member_id}/enrollments:
     get:
       operationId: list_member_enrollments
-      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, whether a qualifying life event would currently be required for reissue under the product/open-enrollment rule, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID that can be used to target enrollment actions. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
+      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the separate pre-effective cancellation boundary (`cancelled_date`), and the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, whether a qualifying life event would currently be required for reissue under the product/open-enrollment rule, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID that can be used to target enrollment actions. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
       summary: List member enrollments
       parameters:
       - in: path
@@ -9866,11 +9870,14 @@ paths:
                       premium_in_cents: 30000
                       coverage_start: '2026-04-01'
                       coverage_end: '2026-08-31'
+                      cancelled_date: null
                       plan_year_coverage_end: '2026-12-31'
                       enrollment_window_start: '2026-03-01'
                       enrollment_window_end: '2026-03-31'
                       election_status: Enrolled
                       policy_status: Coverage Effective
+                      in_last_month_of_coverage: true
+                      is_within_enrollment_window: false
                     - id: enrl_AAAAAAAAAAAAAAAAAAAAAg
                       benefit_type: Dental
                       product_code: VD
@@ -9885,11 +9892,36 @@ paths:
                       premium_in_cents: null
                       coverage_start: null
                       coverage_end: null
+                      cancelled_date: null
                       plan_year_coverage_end: '2026-12-31'
                       enrollment_window_start: '2026-03-01'
                       enrollment_window_end: '2026-03-31'
                       election_status: Waived
                       policy_status: null
+                      in_last_month_of_coverage: false
+                      is_within_enrollment_window: false
+                    - id: enrl_AAAAAAAAAAAAAAAAAAAAAw
+                      benefit_type: Dental
+                      product_code: VD
+                      requires_qle_for_reissue: true
+                      product_name: Vitable Dental
+                      employer_name: Acme Corp
+                      carrier_name: Vitable
+                      plan_name: Vitable Dental Standard
+                      tier_name: Employee Only
+                      employee_deduction_in_cents: 1200
+                      employer_contribution_in_cents: 800
+                      premium_in_cents: 2000
+                      coverage_start: null
+                      coverage_end: null
+                      cancelled_date: '2026-03-15'
+                      plan_year_coverage_end: '2026-12-31'
+                      enrollment_window_start: '2026-03-01'
+                      enrollment_window_end: '2026-03-31'
+                      election_status: Enrolled
+                      policy_status: Cancelled
+                      in_last_month_of_coverage: false
+                      is_within_enrollment_window: false
                   summary: Member Enrollments
           description: ''
           headers:
@@ -14044,6 +14076,14 @@ components:
           description: HRIS connection details, or null when the employer has no integration.
       required:
       - hris
+    EmployerHrisResponse:
+      type: object
+      description: Response containing a single employer hris resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/EmployerHris'
+      required:
+      - data
     EmployerInvoicePdf:
       type: object
       properties:
@@ -14052,6 +14092,14 @@ components:
           description: Time-limited Chargebee PDF download link for the invoice.
       required:
       - download_url
+    EmployerInvoicePdfResponse:
+      type: object
+      description: Response containing a single employer invoice pdf resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/EmployerInvoicePdf'
+      required:
+      - data
     EmployerInvoicesListResponse:
       type: object
       description: 'Cursor-paginated invoices envelope: ``{ "data": [...], "pagination": { "next_offset": ... } }``.'
@@ -14874,6 +14922,11 @@ components:
           format: date
           nullable: true
           description: Coverage window end date (YYYY-MM-DD); null while coverage is open-ended
+        cancelled_date:
+          type: string
+          format: date
+          nullable: true
+          description: Earliest applicable coverage boundary (YYYY-MM-DD) when coverage was cancelled before its effective start; null unless the enrollment was cancelled
         plan_year_coverage_end:
           type: string
           format: date
@@ -14903,11 +14956,12 @@ components:
           - $ref: '#/components/schemas/PlanYearEnrollmentPolicyStatus'
           nullable: true
           description: |-
-            Where the member's coverage stands: `Coverage Upcoming`, `Coverage Effective`, or `Coverage Ended`. Null unless the member enrolled.
+            Where the member's coverage stands: `Coverage Upcoming`, `Coverage Effective`, `Coverage Ended`, or `Cancelled`. Null unless the member enrolled.
 
             * `Coverage Upcoming` - Coverage Upcoming
             * `Coverage Effective` - Coverage Effective
             * `Coverage Ended` - Coverage Ended
+            * `Cancelled` - Cancelled
         in_last_month_of_coverage:
           type: boolean
           description: True when today falls in the final month of the plan-year coverage window; drives end-of-coverage enrollment actions on the client.
@@ -14916,6 +14970,7 @@ components:
           description: True when today falls inside the enrollment window this member has to answer in; drives enrollment-action availability on the client.
       required:
       - benefit_type
+      - cancelled_date
       - election_status
       - employer_name
       - enrollment_window_start
@@ -15269,9 +15324,13 @@ components:
       properties:
         provider:
           type: string
-          description: HRIS/payroll provider name, as stored on the connection (e.g. `ADP RUN`).
+          description: HRIS/payroll provider id, as stored on the connection (e.g. `adp_run`). Filter with this.
+        provider_label:
+          type: string
+          description: Display name of that provider (e.g. `ADP Run`).
       required:
       - provider
+      - provider_label
     OrganizationHrisProvidersResponse:
       type: object
       description: 'Unpaginated ``{"data": [...]}`` list of organization hris providers.'
@@ -15567,11 +15626,12 @@ components:
           - $ref: '#/components/schemas/PlanYearEnrollmentPolicyStatus'
           nullable: true
           description: |-
-            Where the member's coverage stands: `Coverage Upcoming`, `Coverage Effective`, or `Coverage Ended`. Null unless the member enrolled.
+            Where the member's coverage stands: `Coverage Upcoming`, `Coverage Effective`, `Coverage Ended`, or `Cancelled`. Null unless the member enrolled.
 
             * `Coverage Upcoming` - Coverage Upcoming
             * `Coverage Effective` - Coverage Effective
             * `Coverage Ended` - Coverage Ended
+            * `Cancelled` - Cancelled
         dependent_count:
           type: integer
           minimum: 0
@@ -15645,11 +15705,13 @@ components:
       - Coverage Upcoming
       - Coverage Effective
       - Coverage Ended
+      - Cancelled
       type: string
       description: |-
         * `Coverage Upcoming` - Coverage Upcoming
         * `Coverage Effective` - Coverage Effective
         * `Coverage Ended` - Coverage Ended
+        * `Cancelled` - Cancelled
     ProductCode:
       enum:
       - EBA
@@ -16446,7 +16508,10 @@ components:
       properties:
         provider:
           type: string
-          description: HRIS/payroll provider the employer is connected to (e.g. `Paychex`).
+          description: Id of the HRIS/payroll provider the employer is connected to (e.g. `paylocity`).
+        provider_label:
+          type: string
+          description: Display name of that provider (e.g. `Paylocity`).
         status:
           type: string
           description: Connection status reported by the integration.
@@ -16462,6 +16527,7 @@ components:
       required:
       - last_sync_on
       - provider
+      - provider_label
       - status
       - synced_row_count
     _HrisStatus:
@@ -16469,12 +16535,16 @@ components:
       properties:
         provider:
           type: string
-          description: HRIS/payroll provider the employer is connected to (e.g. `Paychex`).
+          description: Id of the HRIS/payroll provider the employer is connected to (e.g. `paylocity`).
+        provider_label:
+          type: string
+          description: Display name of that provider (e.g. `Paylocity`).
         status:
           type: string
           description: Connection status reported by the integration.
       required:
       - provider
+      - provider_label
       - status
     _IchraContributionClass:
       type: object
