@@ -2503,7 +2503,7 @@ paths:
                       organization_id: org_xyz789
                       name: NewCo Industries
                       legal_name: NewCo Industries LLC
-                      ein: XX-XXX6789
+                      ein: 12-3456789
                       reference_id: null
                       email: hr@newco.com
                       phone_number: '2065550100'
@@ -2788,7 +2788,7 @@ paths:
                       organization_id: org_xyz789
                       name: Acme Corporation
                       legal_name: Acme Corporation Inc.
-                      ein: XX-XXX1234
+                      ein: 12-3456789
                       reference_id: partner-emp-001
                       email: hr@acme.com
                       phone_number: '4155550100'
@@ -7014,10 +7014,293 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/enrollments/{enrollment_id}/elect:
+    post:
+      operationId: elect_enrollment
+      description: Elects an available enrollment into one non-ICHRA benefit plan and tier. User-backed callers must provide a reason; it is optional for userless organization callers. This endpoint may be used for administrative purposes as well as for building native enrollment experiences. Tenant mismatches return a non-disclosing 404 before the request body is validated. ICHRA enrollment is not supported by this action.
+      summary: Elect an enrollment
+      parameters:
+      - in: path
+        name: enrollment_id
+        schema:
+          $ref: '#/components/schemas/EnrollmentId'
+        description: Unique enrollment identifier (enrl_*)
+        required: true
+      tags:
+      - Enrollments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElectEnrollmentRequest'
+            examples:
+              ElectEnrollment:
+                value:
+                  benefit_plan_id: bpln_AAAAAAAAAAAAAAAAAAAAAQ
+                  coverage_tier: ES
+                  dependents:
+                  - relationship: Spouse
+                    first_name: Morgan
+                    last_name: Lee
+                    suffix: null
+                    date_of_birth: '1990-02-03'
+                    email: morgan@example.com
+                    phone: '+13135550100'
+                  signing:
+                    full_name: Taylor Lee
+                    signature: Member accepted Vitable's Terms over phone call
+                    signature_date: '2026-08-13'
+                    e_sign_consent_in: true
+                  reason: Member made this election by phone.
+                  ticket_number: BPT-1234
+                summary: Elect enrollment
+        required: true
+      security:
+      - APIKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ElectEnrollmentResponse'
+              examples:
+                ElectedEnrollment:
+                  value:
+                    data:
+                      enrollment_id: enrl_AAAAAAAAAAAAAAAAAAAAAQ
+                  summary: Elected enrollment
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/enrollments/{enrollment_id}/reissue:
     post:
       operationId: reissue_enrollment
-      description: Closes the targeted enrollment and creates a new unanswered enrollment for the same member and plan year. VPC never requires a qualifying life event; other products require an accepted, member-owned event outside open enrollment. User-backed callers must provide a reason; it is optional for userless organization callers. API keys and unbound access tokens may act across the caller organization's book. Employer-bound access tokens may act only on that employer's enrollments, and employee-bound access tokens may act only on that employee's enrollment. Tenant or token-scope mismatches return the same non-disclosing 404 before the request body is validated.
+      description: Closes the targeted enrollment and creates a new unanswered enrollment for the same member and plan year. VPC never requires a qualifying life event; other products require an accepted, member-owned event outside open enrollment. User-backed callers must provide a reason; it is optional for userless organization callers. Tenant mismatches return a non-disclosing 404 before the request body is validated.
       summary: Reissue an enrollment
       parameters:
       - in: path
@@ -9834,7 +10117,7 @@ paths:
   /v1/members/{member_id}/enrollments:
     get:
       operationId: list_member_enrollments
-      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the separate pre-effective cancellation boundary (`cancelled_date`), and the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, whether a qualifying life event would currently be required for reissue under the product/open-enrollment rule, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID that can be used to target enrollment actions. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
+      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the separate pre-effective cancellation boundary (`cancelled_date`), and the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, whether a qualifying life event would currently be required for reissue under the product/open-enrollment rule, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID and the exact employer and benefit plan-year IDs used to fetch that row''s plan-year detail. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
       summary: List member enrollments
       parameters:
       - in: path
@@ -9857,6 +10140,8 @@ paths:
                   value:
                     data:
                     - id: enrl_AAAAAAAAAAAAAAAAAAAAAQ
+                      employer_id: empr_AAAAAAAAAAAAAAAAAAAAAQ
+                      benefit_plan_year_id: plyr_AAAAAAAAAAAAAAAAAAAAAQ
                       benefit_type: Medical
                       product_code: MEC_PLUS
                       requires_qle_for_reissue: false
@@ -9879,6 +10164,8 @@ paths:
                       in_last_month_of_coverage: true
                       is_within_enrollment_window: false
                     - id: enrl_AAAAAAAAAAAAAAAAAAAAAg
+                      employer_id: empr_AAAAAAAAAAAAAAAAAAAAAg
+                      benefit_plan_year_id: plyr_AAAAAAAAAAAAAAAAAAAAAg
                       benefit_type: Dental
                       product_code: VD
                       requires_qle_for_reissue: true
@@ -13402,10 +13689,10 @@ components:
       type: string
       description: |-
         * `Unspecified` - Unspecified
-        * `EE` - Ee
-        * `ES` - Es
-        * `EC` - Ec
-        * `EF` - Ef
+        * `EE` - EE
+        * `ES` - ES
+        * `EC` - EC
+        * `EF` - EF
     CreateEmployerRequest:
       type: object
       properties:
@@ -13641,6 +13928,110 @@ components:
       - group_member_id
       - member_name
       - nsa_table
+    ElectEnrollment:
+      type: object
+      properties:
+        enrollment_id:
+          type: string
+          example: enrl_AAAAAAAAAAAAAAAAAAAAAQ
+          description: Opaque identifier for the elected enrollment
+      required:
+      - enrollment_id
+    ElectEnrollmentRequest:
+      type: object
+      properties:
+        benefit_plan_id:
+          type: string
+          description: Selected benefit plan identifier (bpln_*)
+        coverage_tier:
+          allOf:
+          - $ref: '#/components/schemas/CoverageTier'
+          description: |-
+            Coverage tier to elect
+
+            * `Unspecified` - Unspecified
+            * `EE` - EE
+            * `ES` - ES
+            * `EC` - EC
+            * `EF` - EF
+        dependents:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElectionDependentRequest'
+          default: []
+        signing:
+          $ref: '#/components/schemas/ElectionSigningRequest'
+        reason:
+          type: string
+          nullable: true
+          description: Audit reason for the election; required for user-backed callers and optional for userless organization callers
+        ticket_number:
+          type: string
+          nullable: true
+          description: Optional audit ticket number
+          maxLength: 1000
+      required:
+      - benefit_plan_id
+      - coverage_tier
+      - signing
+    ElectEnrollmentResponse:
+      type: object
+      description: Response containing a single elect enrollment resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/ElectEnrollment'
+      required:
+      - data
+    ElectionDependentRequest:
+      type: object
+      properties:
+        relationship:
+          $ref: '#/components/schemas/Relationship'
+        first_name:
+          type: string
+          maxLength: 256
+        last_name:
+          type: string
+          maxLength: 256
+        suffix:
+          allOf:
+          - $ref: '#/components/schemas/Suffix'
+          nullable: true
+        date_of_birth:
+          type: string
+          format: date
+        email:
+          type: string
+          nullable: true
+          description: Dependent email. Required for dependents 18 or older; do not provide for dependents under 18.
+        phone:
+          type: string
+          nullable: true
+          description: Dependent phone. Optional but strongly recommended for dependents 18 or older; do not provide for dependents under 18.
+      required:
+      - date_of_birth
+      - first_name
+      - last_name
+      - relationship
+    ElectionSigningRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          maxLength: 256
+        signature:
+          type: string
+          maxLength: 256
+        signature_date:
+          type: string
+          format: date
+        e_sign_consent_in:
+          type: boolean
+      required:
+      - e_sign_consent_in
+      - full_name
+      - signature
+      - signature_date
     EligibilityRuleCompensationType:
       enum:
       - Salary
@@ -13917,7 +14308,7 @@ components:
           type: string
           nullable: true
           readOnly: true
-          description: Employer Identification Number (masked in responses)
+          description: 'Employer Identification Number (format: XX-XXXXXXX)'
         reference_id:
           type: string
           nullable: true
@@ -14848,6 +15239,14 @@ components:
           type: string
           example: enrl_AAAAAAAAAAAAAAAAAAAAAQ
           description: Opaque, stable enrollment identifier used to target enrollment actions
+        employer_id:
+          type: string
+          example: empr_AAAAAAAAAAAAAAAAAAAAAQ
+          description: Exact employer identifier for this enrollment
+        benefit_plan_year_id:
+          type: string
+          example: plyr_AAAAAAAAAAAAAAAAAAAAAQ
+          description: Exact benefit plan-year identifier for this enrollment
         benefit_type:
           allOf:
           - $ref: '#/components/schemas/Category'
@@ -14969,9 +15368,11 @@ components:
           type: boolean
           description: True when today falls inside the enrollment window this member has to answer in; drives enrollment-action availability on the client.
       required:
+      - benefit_plan_year_id
       - benefit_type
       - cancelled_date
       - election_status
+      - employer_id
       - employer_name
       - enrollment_window_start
       - id
@@ -16071,6 +16472,24 @@ components:
       - has_additional_payroll_system
       - is_controlled_group
       - payroll_data_impacts_eligibility_acknowledged
+    Suffix:
+      enum:
+      - Sr
+      - Jr
+      - I
+      - II
+      - III
+      - IV
+      - V
+      type: string
+      description: |-
+        * `Sr` - Sr
+        * `Jr` - Jr
+        * `I` - I
+        * `II` - II
+        * `III` - III
+        * `IV` - IV
+        * `V` - V
     TaxClassification:
       enum:
       - Unknown
@@ -16350,6 +16769,17 @@ components:
         benefit_plan_tier_name:
           type: string
           description: Coverage-tier name.
+        coverage_tier:
+          allOf:
+          - $ref: '#/components/schemas/CoverageTier'
+          description: |-
+            Coverage-tier code for this tier.
+
+            * `Unspecified` - Unspecified
+            * `EE` - Ee
+            * `ES` - Es
+            * `EC` - Ec
+            * `EF` - Ef
         cost:
           type: integer
           description: Monthly employee deduction in cents.
@@ -16368,6 +16798,7 @@ components:
       - benefit_plan_tier_name
       - cost
       - cost_per_dependent
+      - coverage_tier
       - dependents_required_in
       - spouse_required_in
     _EligibilityPolicy:
