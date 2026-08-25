@@ -6988,7 +6988,7 @@ paths:
   /v1/enrollments/{enrollment_id}:
     get:
       operationId: get_enrollment
-      description: Retrieves detailed information for a specific enrollment by ID.
+      description: 'Retrieves a single enrollment: the employee and employer it belongs to, the benefit product, its status, the coverage period, the employee payroll deduction and employer contribution, and the enrolled plan''s Summary of Benefits and Coverage document when one is on file. An enrollment the caller cannot reach is indistinguishable from one that does not exist.'
       summary: Get enrollment details
       parameters:
       - in: path
@@ -7028,8 +7028,31 @@ paths:
                       terminated_at: null
                       created_at: '2026-01-15T10:30:00Z'
                       updated_at: '2026-01-15T10:30:00Z'
+                      sbc_url: https://carrier.example.com/documents/sbc.pdf
                   summary: Enrollment Detail
           description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -7092,28 +7115,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions for this resource
-          headers:
-            X-RateLimit-Limit:
-              description: Maximum number of requests allowed within the rate limit window
-              schema:
-                type: integer
-                example: 1000
-            X-RateLimit-Remaining:
-              description: Number of requests remaining in the current rate limit window
-              schema:
-                type: integer
-                example: 999
-            X-RateLimit-Reset:
-              description: Unix timestamp (seconds) when the rate limit window resets
-              schema:
-                type: integer
-                example: 1700000000
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: Not Found - The requested resource does not exist
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -9616,6 +9617,7 @@ paths:
         name: member_id
         schema:
           $ref: '#/components/schemas/MemberId'
+        description: Unique member identifier (mbr_*)
         required: true
       tags:
       - Members
@@ -9634,7 +9636,9 @@ paths:
                       id: mbr_abc123def456
                       name: Jane Doe
                       first_name: Jane
+                      middle_name: null
                       last_name: Doe
+                      suffix: null
                       email: jane.doe@example.com
                       phone: '4155550100'
                       address:
@@ -9646,6 +9650,7 @@ paths:
                       date_of_birth: '1990-04-12'
                       age: 36
                       sex_at_birth: Female
+                      gender: Female
                       preferred_language: en
                       tobacco_status: false
                       status: onboarded
@@ -9711,6 +9716,274 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: update_member
+      description: Partially updates a member profile and returns the full updated profile. Omitted fields are preserved. Null clears middle_name, suffix, sex_at_birth, gender, and tobacco_status; other fields cannot be null. Access is limited to organization callers with write access to the member. Unknown, unauthorized, and out-of-scope members return the same 404.
+      summary: Update member
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          $ref: '#/components/schemas/MemberId'
+        description: Unique member identifier (mbr_*)
+        required: true
+      tags:
+      - Members
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateMemberRequest'
+            examples:
+              UpdateMemberProfile:
+                value:
+                  first_name: Jane
+                  middle_name: null
+                  address:
+                    address_line_1: 123 Main Street
+                    address_line_2: Apt 4B
+                    city: San Francisco
+                    state: CA
+                    zipcode: '94102'
+                  phone: '4155550100'
+                  preferred_language: en
+                summary: Update Member Profile
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Invalid request.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
         '401':
           description: Unauthorized - Invalid or missing API key
           headers:
@@ -14606,6 +14879,7 @@ components:
       - benefit_plan_id
       - coverage_tier
       - signing
+      additionalProperties: false
     ElectEnrollmentResponse:
       type: object
       description: Response containing a single elect enrollment resource.
@@ -14627,7 +14901,7 @@ components:
           maxLength: 256
         suffix:
           allOf:
-          - $ref: '#/components/schemas/Suffix'
+          - $ref: '#/components/schemas/NameSuffix'
           nullable: true
         date_of_birth:
           type: string
@@ -14645,6 +14919,7 @@ components:
       - first_name
       - last_name
       - relationship
+      additionalProperties: false
     ElectionSigningRequest:
       type: object
       properties:
@@ -14664,6 +14939,7 @@ components:
       - full_name
       - signature
       - signature_date
+      additionalProperties: false
     EligibilityRuleCompensationType:
       enum:
       - Salary
@@ -15183,6 +15459,7 @@ components:
       - data
     Enrollment:
       type: object
+      description: One enrollment as it appears in a list row.
       properties:
         id:
           type: string
@@ -15256,6 +15533,90 @@ components:
       - status
       - terminated_at
       - updated_at
+    EnrollmentDetail:
+      type: object
+      description: |-
+        A single enrollment, including the enrolled plan's documents.
+
+        The plan documents are resolved one enrollment at a time and are therefore not part of the
+        list row.
+      properties:
+        id:
+          type: string
+          description: Unique enrollment identifier (enrl_*)
+        employee_id:
+          type: string
+          description: Employee ID (empl_*)
+        employer_id:
+          type: string
+          description: Employer ID (empr_*)
+        benefit:
+          allOf:
+          - $ref: '#/components/schemas/BenefitSummary'
+          description: Nested benefit product summary
+        status:
+          allOf:
+          - $ref: '#/components/schemas/EnrollmentStatus'
+          description: |-
+            Enrollment status
+
+            * `pending` - Pending
+            * `enrolled` - Enrolled
+            * `waived` - Waived
+            * `inactive` - Inactive
+        coverage_start:
+          type: string
+          format: date
+          description: Coverage period start date
+        coverage_end:
+          type: string
+          format: date
+          nullable: true
+          description: Coverage period end date
+        employee_deduction_in_cents:
+          type: integer
+          nullable: true
+          description: Employee monthly payroll deduction in cents
+        employer_contribution_in_cents:
+          type: integer
+          nullable: true
+          description: Employer monthly contribution in cents
+        answered_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the employee enrolled or waived
+        terminated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: When coverage was terminated
+        created_at:
+          type: string
+          format: date-time
+          description: When the enrollment was created
+        updated_at:
+          type: string
+          format: date-time
+          description: When the enrollment was last updated
+        sbc_url:
+          type: string
+          nullable: true
+          description: Summary of Benefits and Coverage (SBC) document URL for the enrolled plan; null when not on file. Only individual (ICHRA) plans carry an SBC — group plans have no SBC on record and always resolve to null.
+      required:
+      - answered_at
+      - benefit
+      - coverage_end
+      - coverage_start
+      - created_at
+      - employee_deduction_in_cents
+      - employee_id
+      - employer_contribution_in_cents
+      - employer_id
+      - id
+      - status
+      - terminated_at
+      - updated_at
     EnrollmentListResponse:
       type: object
       description: Paginated list response containing enrollment resources.
@@ -15274,7 +15635,7 @@ components:
       description: Response containing a single enrollment resource.
       properties:
         data:
-          $ref: '#/components/schemas/Enrollment'
+          $ref: '#/components/schemas/EnrollmentDetail'
       required:
       - data
     EnrollmentStatus:
@@ -15341,8 +15702,8 @@ components:
         * `Male` - Male
         * `Female` - Female
         * `Transgender` - Transgender
-        * `Non-binary` - Non-binary
-        * `Prefer not to respond` - Prefer not to respond
+        * `Non-binary` - Non Binary
+        * `Prefer not to respond` - Prefer Not To Respond
     GrantType:
       enum:
       - client_credentials
@@ -15776,7 +16137,25 @@ components:
         name:
           type: string
           readOnly: true
-          description: Member's full name
+          description: Member's full legal name
+        middle_name:
+          type: string
+          nullable: true
+          description: Member's legal middle name
+        suffix:
+          allOf:
+          - $ref: '#/components/schemas/NameSuffix'
+          nullable: true
+          description: |-
+            Member's name suffix
+
+            * `Sr` - Senior
+            * `Jr` - Junior
+            * `I` - First
+            * `II` - Second
+            * `III` - Third
+            * `IV` - Fourth
+            * `V` - Fifth
         date_of_birth:
           type: string
           format: date
@@ -15785,13 +16164,41 @@ components:
           type: integer
           description: Member's age in years, derived from date of birth
         sex_at_birth:
-          type: string
+          allOf:
+          - $ref: '#/components/schemas/SexAtBirth'
           nullable: true
-          description: Sex assigned at birth, if provided
+          description: |-
+            Sex assigned at birth, if provided
+
+            * `Male` - Male
+            * `Female` - Female
+            * `Other` - Other
+            * `Unknown` - Unknown
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/Gender'
+          nullable: true
+          description: |-
+            Member's gender identity
+
+            * `Male` - Male
+            * `Female` - Female
+            * `Transgender` - Transgender
+            * `Non-binary` - Non Binary
+            * `Prefer not to respond` - Prefer Not To Respond
         preferred_language:
-          type: string
+          allOf:
+          - $ref: '#/components/schemas/PreferredLanguage'
           nullable: true
-          description: Member's preferred language code (e.g., en, es)
+          description: |-
+            Member's preferred language code (e.g., en, es)
+
+            * `en` - English
+            * `es` - Spanish
+            * `zh` - Chinese
+            * `ru` - Russian
+            * `sw` - Swahili
+            * `th` - Thai
         tobacco_status:
           type: boolean
           nullable: true
@@ -15823,8 +16230,73 @@ components:
           type: string
           description: City name
         state:
-          type: string
-          description: Two-letter state code (e.g., CA, NY)
+          allOf:
+          - $ref: '#/components/schemas/State'
+          description: |-
+            Two-letter state code (e.g., CA, NY)
+
+            * `AL` - Al
+            * `AK` - Ak
+            * `AZ` - Az
+            * `AR` - Ar
+            * `CA` - Ca
+            * `CO` - Co
+            * `CT` - Ct
+            * `DC` - Dc
+            * `DE` - De
+            * `FL` - Fl
+            * `GA` - Ga
+            * `HI` - Hi
+            * `ID` - Id
+            * `IL` - Il
+            * `IN` - In
+            * `IA` - Ia
+            * `KS` - Ks
+            * `KY` - Ky
+            * `LA` - La
+            * `ME` - Me
+            * `MD` - Md
+            * `MA` - Ma
+            * `MI` - Mi
+            * `MN` - Mn
+            * `MS` - Ms
+            * `MO` - Mo
+            * `MT` - Mt
+            * `NE` - Ne
+            * `NV` - Nv
+            * `NH` - Nh
+            * `NJ` - Nj
+            * `NM` - Nm
+            * `NY` - Ny
+            * `NC` - Nc
+            * `ND` - Nd
+            * `OH` - Oh
+            * `OK` - Ok
+            * `OR` - Or
+            * `PA` - Pa
+            * `RI` - Ri
+            * `SC` - Sc
+            * `SD` - Sd
+            * `TN` - Tn
+            * `TX` - Tx
+            * `UT` - Ut
+            * `VT` - Vt
+            * `VA` - Va
+            * `WA` - Wa
+            * `WI` - Wi
+            * `WV` - Wv
+            * `WY` - Wy
+            * `PR` - Pr
+            * `GU` - Gu
+            * `AS` - As
+            * `VI` - Vi
+            * `MP` - Mp
+            * `MH` - Mh
+            * `PW` - Pw
+            * `FM` - Fm
+            * `AE` - Ae
+            * `AA` - Aa
+            * `AP` - Ap
         zipcode:
           type: string
           description: ZIP code (5 or 9 digit)
@@ -16207,6 +16679,24 @@ components:
       description: |-
         * `EMAIL_CENSUS` - EMAIL_CENSUS
         * `SECOND_SYSTEM_ACCESS` - SECOND_SYSTEM_ACCESS
+    NameSuffix:
+      enum:
+      - Sr
+      - Jr
+      - I
+      - II
+      - III
+      - IV
+      - V
+      type: string
+      description: |-
+        * `Sr` - Sr
+        * `Jr` - Jr
+        * `I` - I
+        * `II` - II
+        * `III` - III
+        * `IV` - IV
+        * `V` - V
     Operation:
       enum:
       - add
@@ -16509,6 +16999,91 @@ components:
           type: string
           nullable: true
           maxLength: 255
+    PatchedUpdateMemberRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          description: Legal first name
+          maxLength: 200
+        middle_name:
+          type: string
+          nullable: true
+          description: Legal middle name
+          maxLength: 200
+        last_name:
+          type: string
+          description: Legal last name
+          maxLength: 200
+        suffix:
+          allOf:
+          - $ref: '#/components/schemas/NameSuffix'
+          nullable: true
+          description: |-
+            Name suffix
+
+            * `Sr` - Sr
+            * `Jr` - Jr
+            * `I` - I
+            * `II` - II
+            * `III` - III
+            * `IV` - IV
+            * `V` - V
+        date_of_birth:
+          type: string
+          format: date
+          description: Date of birth (YYYY-MM-DD)
+        sex_at_birth:
+          allOf:
+          - $ref: '#/components/schemas/SexAtBirth'
+          nullable: true
+          description: |-
+            Sex assigned at birth
+
+            * `Male` - Male
+            * `Female` - Female
+            * `Other` - Other
+            * `Unknown` - Unknown
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/Gender'
+          nullable: true
+          description: |-
+            Gender identity
+
+            * `Male` - Male
+            * `Female` - Female
+            * `Transgender` - Transgender
+            * `Non-binary` - Non-binary
+            * `Prefer not to respond` - Prefer not to respond
+        address:
+          allOf:
+          - $ref: '#/components/schemas/UpdateMemberAddressRequest'
+          description: Complete residential address
+        email:
+          type: string
+          format: email
+          description: Email address
+        phone:
+          type: string
+          description: Phone number
+        preferred_language:
+          allOf:
+          - $ref: '#/components/schemas/PreferredLanguage'
+          description: |-
+            Preferred language code
+
+            * `en` - en
+            * `es` - es
+            * `zh` - zh
+            * `ru` - ru
+            * `sw` - sw
+            * `th` - th
+        tobacco_status:
+          type: boolean
+          nullable: true
+          description: Whether the member uses tobacco
+      additionalProperties: false
     PayrollAccessSetupStatus:
       type: object
       properties:
@@ -16755,6 +17330,22 @@ components:
         * `Coverage Effective` - Coverage Effective
         * `Coverage Ended` - Coverage Ended
         * `Cancelled` - Cancelled
+    PreferredLanguage:
+      enum:
+      - en
+      - es
+      - zh
+      - ru
+      - sw
+      - th
+      type: string
+      description: |-
+        * `en` - English
+        * `es` - Spanish
+        * `zh` - Chinese
+        * `ru` - Russian
+        * `sw` - Swahili
+        * `th` - Thai
     ProductCode:
       enum:
       - EBA
@@ -17114,24 +17705,6 @@ components:
       - has_additional_payroll_system
       - is_controlled_group
       - payroll_data_impacts_eligibility_acknowledged
-    Suffix:
-      enum:
-      - Sr
-      - Jr
-      - I
-      - II
-      - III
-      - IV
-      - V
-      type: string
-      description: |-
-        * `Sr` - Sr
-        * `Jr` - Jr
-        * `I` - I
-        * `II` - II
-        * `III` - III
-        * `IV` - IV
-        * `V` - V
     TaxClassification:
       enum:
       - Unknown
@@ -17223,6 +17796,102 @@ components:
           $ref: '#/components/schemas/DeductionFrequency'
       required:
       - pay_frequency
+    UpdateMemberAddressRequest:
+      type: object
+      properties:
+        address_line_1:
+          type: string
+          description: Primary street address
+          maxLength: 255
+          minLength: 1
+        address_line_2:
+          type: string
+          nullable: true
+          description: Secondary street address
+          maxLength: 255
+        city:
+          type: string
+          description: City name
+          maxLength: 255
+          minLength: 1
+        state:
+          allOf:
+          - $ref: '#/components/schemas/State'
+          description: |-
+            Two-letter state code
+
+            * `AL` - AL
+            * `AK` - AK
+            * `AZ` - AZ
+            * `AR` - AR
+            * `CA` - CA
+            * `CO` - CO
+            * `CT` - CT
+            * `DC` - DC
+            * `DE` - DE
+            * `FL` - FL
+            * `GA` - GA
+            * `HI` - HI
+            * `ID` - ID
+            * `IL` - IL
+            * `IN` - IN
+            * `IA` - IA
+            * `KS` - KS
+            * `KY` - KY
+            * `LA` - LA
+            * `ME` - ME
+            * `MD` - MD
+            * `MA` - MA
+            * `MI` - MI
+            * `MN` - MN
+            * `MS` - MS
+            * `MO` - MO
+            * `MT` - MT
+            * `NE` - NE
+            * `NV` - NV
+            * `NH` - NH
+            * `NJ` - NJ
+            * `NM` - NM
+            * `NY` - NY
+            * `NC` - NC
+            * `ND` - ND
+            * `OH` - OH
+            * `OK` - OK
+            * `OR` - OR
+            * `PA` - PA
+            * `RI` - RI
+            * `SC` - SC
+            * `SD` - SD
+            * `TN` - TN
+            * `TX` - TX
+            * `UT` - UT
+            * `VT` - VT
+            * `VA` - VA
+            * `WA` - WA
+            * `WI` - WI
+            * `WV` - WV
+            * `WY` - WY
+            * `PR` - PR
+            * `GU` - GU
+            * `AS` - AS
+            * `VI` - VI
+            * `MP` - MP
+            * `MH` - MH
+            * `PW` - PW
+            * `FM` - FM
+            * `AE` - AE
+            * `AA` - AA
+            * `AP` - AP
+        zipcode:
+          type: string
+          description: ZIP code
+          minLength: 1
+      required:
+      - address_line_1
+      - city
+      - state
+      - zipcode
+      additionalProperties: false
     UserType923:
       enum:
       - Member
@@ -17837,6 +18506,8 @@ components:
       type: string
     MemberId:
       type: string
+      example: mbr_abc123def456
+      description: Unique member identifier (mbr_*)
     Status:
       type: string
       enum:
