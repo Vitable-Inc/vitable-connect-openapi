@@ -2380,7 +2380,7 @@ paths:
   /v1/employers:
     get:
       operationId: list_employers
-      description: 'Returns the caller''s employer book — every employer with its computed columns (enrollment-rate summary, benefit-family tags, HRIS connection, benefit-lifecycle stage) merged with the employer''s flat CRM fields (legal name, EIN, contact, address, timestamps). The book is derived from the authenticated principal: one organization''s employers, or every organization''s for a caller whose reach is not a single organization. Supports name search, benefit-family/lifecycle/HRIS filters, and page/limit pagination.'
+      description: 'Returns the caller''s employer book — every employer with its computed columns (enrollment-rate summary, benefit-family tags, HRIS connection, benefit-lifecycle stage) merged with the employer''s flat CRM fields (legal name, EIN, contact, address, timestamps). The book is derived from the authenticated principal: one organization''s employers, or every organization''s for a caller whose reach is not a single organization. Supports search by display name, legal name or exact EIN, benefit-family/lifecycle/HRIS filters, and page/limit pagination.'
       summary: List employers
       parameters:
       - in: query
@@ -2422,7 +2422,7 @@ paths:
         name: search
         schema:
           $ref: '#/components/schemas/Search'
-        description: Case-insensitive employer-name substring filter.
+        description: Employer filter. Matches the display name or the legal name case-insensitively as a substring, or the EIN exactly (with or without its dash).
       tags:
       - Employers
       security:
@@ -16077,6 +16077,14 @@ components:
       - access_token
       - refresh_token
       - user
+    MaritalStatus:
+      enum:
+      - Single
+      - Married
+      type: string
+      description: |-
+        * `Single` - Single
+        * `Married` - Married
     MeResponse:
       type: object
       properties:
@@ -16203,6 +16211,15 @@ components:
           type: boolean
           nullable: true
           description: Whether the member uses tobacco, if known
+        marital_status:
+          allOf:
+          - $ref: '#/components/schemas/MaritalStatus'
+          nullable: true
+          description: |-
+            Member's marital status, if provided
+
+            * `Single` - Single
+            * `Married` - Married
         status:
           allOf:
           - $ref: '#/components/schemas/MemberStatus'
@@ -17083,6 +17100,15 @@ components:
           type: boolean
           nullable: true
           description: Whether the member uses tobacco
+        marital_status:
+          allOf:
+          - $ref: '#/components/schemas/MaritalStatus'
+          nullable: true
+          description: |-
+            Marital status
+
+            * `Single` - Single
+            * `Married` - Married
       additionalProperties: false
     PayrollAccessSetupStatus:
       type: object
@@ -18459,7 +18485,7 @@ components:
       type: string
       nullable: true
       minLength: 1
-      description: Case-insensitive employer-name substring filter.
+      description: Employer filter. Matches the display name or the legal name case-insensitively as a substring, or the EIN exactly (with or without its dash).
     EmployerId:
       type: string
       example: empr_abc123def456
