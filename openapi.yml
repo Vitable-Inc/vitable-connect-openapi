@@ -7509,7 +7509,7 @@ paths:
   /v1/enrollments/{enrollment_id}/elect:
     post:
       operationId: elect_enrollment
-      description: Elects an available enrollment into one non-ICHRA benefit plan and tier. User-backed callers must provide a reason; it is optional for userless organization callers. This endpoint may be used for administrative purposes as well as for building native enrollment experiences. Tenant mismatches return a non-disclosing 404 before the request body is validated. ICHRA enrollment is not supported by this action.
+      description: Elects an available enrollment into one non-ICHRA benefit plan and tier. User-backed callers must provide a reason; it is optional for organization API-key callers. This endpoint may be used for administrative purposes as well as for building native enrollment experiences. Tenant mismatches return a non-disclosing 404 before the request body is validated. ICHRA enrollment is not supported by this action.
       summary: Elect an enrollment
       parameters:
       - in: path
@@ -7792,7 +7792,7 @@ paths:
   /v1/enrollments/{enrollment_id}/reissue:
     post:
       operationId: reissue_enrollment
-      description: Closes the targeted enrollment and creates a new unanswered enrollment for the same member and plan year. VPC never requires a qualifying life event; other products require an accepted, member-owned event outside open enrollment. User-backed callers must provide a reason; it is optional for userless organization callers. Tenant mismatches return a non-disclosing 404 before the request body is validated.
+      description: Closes the targeted enrollment and creates a new unanswered enrollment for the same member and plan year. VPC never requires a qualifying life event; other products require an accepted, member-owned event outside open enrollment. User-backed callers must provide a reason; it is optional for organization API-key callers. Tenant mismatches return a non-disclosing 404 before the request body is validated.
       summary: Reissue an enrollment
       parameters:
       - in: path
@@ -8064,7 +8064,7 @@ paths:
   /v1/enrollments/{enrollment_id}/terminate:
     post:
       operationId: terminate_enrollment
-      description: Terminates enrolled coverage immediately. An accepted qualifying life event owned by the enrollment member is required unless the plan is VPC or ICHRA. User-backed callers must provide a reason; it is optional for userless organization callers. API keys may act across the caller organization's book. Tenant mismatches return the same non-disclosing 404 before the request body is validated.
+      description: Terminates enrolled coverage immediately. An accepted qualifying life event owned by the enrollment member is required unless the plan is VPC or ICHRA. User-backed callers must provide a reason; it is optional for organization API-key callers. API keys may act across the caller organization's book. Tenant mismatches return the same non-disclosing 404 before the request body is validated.
       summary: Terminate an enrollment
       parameters:
       - in: path
@@ -11686,6 +11686,480 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /v1/members/{member_id}/ichra-payment-accounts:
+    get:
+      operationId: list_member_ichra_payment_accounts
+      description: Lists a member's ICHRA payment accounts — one per employment that is enrolled in an automated-banking ICHRA benefit. Each row carries the deposit account number and routing number, the current balance, the most recent credit and its date, and whether a debit card has been provisioned. Card credentials are never included; they are revealed only through a card session. A member not visible to the caller returns a 404.
+      summary: List member ICHRA payment accounts
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          $ref: '#/components/schemas/MemberId'
+        required: true
+      tags:
+      - Members
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberIchraPaymentAccountsResponse'
+              examples:
+                MemberICHRAPaymentAccounts:
+                  value:
+                    data:
+                    - id: pyac_AAAAAAAAAAAAAAAAAAAAAQ
+                      employer_id: empr_AAAAAAAAAAAAAAAAAAAAAQ
+                      employer_name: Acme Corp
+                      account_number: '76650000001821'
+                      routing_number: '183981212'
+                      card_provisioned_in: true
+                      current_balance_in_cents: 2500
+                      latest_payment_in_cents: 51100
+                      last_payment_date: '2026-05-14'
+                      as_of: '2026-05-18T14:03:00Z'
+                  summary: Member ICHRA Payment Accounts
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/members/{member_id}/ichra-payment-accounts/{payment_account_id}/card-sessions:
+    post:
+      operationId: create_member_card_embed_session
+      description: Mints a single-use, short-lived session that lets the member reveal their debit card number, expiry, and security code inside a provider-hosted iframe. Load `embed_url` as the iframe source; the card is never returned to the caller or to the hosting page. Sessions are consumed on reveal and rate limited per member and per organization. Returns 404 when the member or account is not visible to the caller, 409 when no card has been provisioned, and 429 when the provider rate limit is exceeded.
+      summary: Create member card reveal session
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          $ref: '#/components/schemas/MemberId'
+        required: true
+      - in: path
+        name: payment_account_id
+        schema:
+          $ref: '#/components/schemas/PaymentAccountId'
+        required: true
+      tags:
+      - Members
+      security:
+      - APIKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardEmbedSessionResponse'
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/members/{member_id}/id-cards:
     get:
       operationId: list_member_id_cards
@@ -14746,6 +15220,27 @@ components:
       description: |-
         * `employer` - employer
         * `employee` - employee
+    CardEmbedSession:
+      type: object
+      properties:
+        embed_url:
+          type: string
+          description: URL to load as the reveal iframe source. Single use.
+        expires_at:
+          type: string
+          format: date-time
+          description: When the session stops being accepted
+      required:
+      - embed_url
+      - expires_at
+    CardEmbedSessionResponse:
+      type: object
+      description: Response containing a single card embed session resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/CardEmbedSession'
+      required:
+      - data
     CardType:
       enum:
       - medical
@@ -15222,7 +15717,7 @@ components:
         reason:
           type: string
           nullable: true
-          description: Audit reason for the election; required for user-backed callers and optional for userless organization callers
+          description: Audit reason for the election; required for user-backed callers and optional for long-lived organization API-key callers
         ticket_number:
           type: string
           nullable: true
@@ -16917,6 +17412,71 @@ components:
             $ref: '#/components/schemas/MemberEnrollment'
       required:
       - data
+    MemberIchraPaymentAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: The payment account identifier with 'pyac_' prefix
+        employer_id:
+          type: string
+          nullable: true
+          readOnly: true
+          description: The employer's identifier with 'empr_' prefix
+        employer_name:
+          type: string
+          nullable: true
+          description: Name of the employer this payment account belongs to
+        account_number:
+          type: string
+          nullable: true
+          description: The member's deposit account number
+        routing_number:
+          type: string
+          nullable: true
+          description: The member's deposit account routing number
+        card_provisioned_in:
+          type: boolean
+          description: Whether a debit card has been provisioned, and so whether a card reveal can be requested
+        current_balance_in_cents:
+          type: integer
+          nullable: true
+          description: Current balance held for the member, in cents
+        latest_payment_in_cents:
+          type: integer
+          nullable: true
+          description: Most recent credit posted to the member's account, in cents
+        last_payment_date:
+          type: string
+          format: date
+          nullable: true
+          description: Date the most recent credit posted (YYYY-MM-DD)
+        as_of:
+          type: string
+          format: date-time
+          description: When these values were read from the payment provider
+      required:
+      - account_number
+      - as_of
+      - card_provisioned_in
+      - current_balance_in_cents
+      - employer_id
+      - employer_name
+      - id
+      - last_payment_date
+      - latest_payment_in_cents
+      - routing_number
+    MemberIchraPaymentAccountsResponse:
+      type: object
+      description: 'Unpaginated ``{"data": [...]}`` list of member ichra payment accounts.'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberIchraPaymentAccount'
+      required:
+      - data
     MemberLegalDependent:
       type: object
       description: Wire serializer for :class:`MemberLegalDependentDTO` (one legal-dependent row).
@@ -17824,7 +18384,7 @@ components:
         reason:
           type: string
           nullable: true
-          description: Audit reason for the reissue; required for user-backed callers and optional for userless organization callers
+          description: Audit reason for the reissue; required for user-backed callers and optional for long-lived organization API-key callers
         ticket_number:
           type: string
           nullable: true
@@ -18140,7 +18700,7 @@ components:
         reason:
           type: string
           nullable: true
-          description: Audit reason for the termination; required for user-backed callers and optional for userless organization callers
+          description: Audit reason for the termination; required for user-backed callers and optional for long-lived organization API-key callers
         ticket_number:
           type: string
           nullable: true
@@ -18935,6 +19495,8 @@ components:
       type: string
       example: mbr_abc123def456
       description: Unique member identifier (mbr_*)
+    PaymentAccountId:
+      type: string
     Status:
       type: string
       enum:
