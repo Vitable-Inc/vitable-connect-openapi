@@ -11140,7 +11140,7 @@ paths:
   /v1/members/{member_id}/enrollments:
     get:
       operationId: list_member_enrollments
-      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the separate pre-effective cancellation boundary (`cancelled_date`), and the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, the date the enrollment record was created (`issued_date`, the value Ops labels Issued on, reported for every row whatever the member answered), whether a qualifying life event would currently be required for reissue under the product/open-enrollment rule, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID and the exact employer and benefit plan-year IDs used to fetch that row''s plan-year detail. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
+      description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the separate pre-effective cancellation boundary (`cancelled_date`), and the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, the date the enrollment record was created (`issued_date`, the value Ops labels Issued on, reported for every row whatever the member answered), the window the member could answer in -- which never opens before the enrollment was issued, so a row issued mid-open-enrollment starts its window on its issue date -- whether a qualifying life event would currently be required for reissue under the product/open-enrollment rule, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID and the exact employer and benefit plan-year IDs used to fetch that row''s plan-year detail. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
       summary: List member enrollments
       parameters:
       - in: path
@@ -11181,7 +11181,7 @@ paths:
                       cancelled_date: null
                       plan_year_coverage_end: '2026-12-31'
                       issued_date: '2026-03-04'
-                      enrollment_window_start: '2026-03-01'
+                      enrollment_window_start: '2026-03-04'
                       enrollment_window_end: '2026-03-31'
                       election_status: Enrolled
                       policy_status: Coverage Effective
@@ -11206,7 +11206,7 @@ paths:
                       cancelled_date: null
                       plan_year_coverage_end: '2026-12-31'
                       issued_date: '2026-03-04'
-                      enrollment_window_start: '2026-03-01'
+                      enrollment_window_start: '2026-03-04'
                       enrollment_window_end: '2026-03-31'
                       election_status: Waived
                       policy_status: null
@@ -11229,7 +11229,7 @@ paths:
                       cancelled_date: '2026-03-15'
                       plan_year_coverage_end: '2026-12-31'
                       issued_date: '2026-03-04'
-                      enrollment_window_start: '2026-03-01'
+                      enrollment_window_start: '2026-03-04'
                       enrollment_window_end: '2026-03-31'
                       election_status: Enrolled
                       policy_status: Cancelled
@@ -12482,7 +12482,8 @@ paths:
                   value:
                     data:
                     - id: qle_AAAAAAAAAAAAAAAAAAAAAQ
-                      event_type: Other
+                      event_type: other
+                      event_type_label: Other
                       other_event: Relocation
                       status: approved
                       submitted_at: '2026-07-01T14:30:00Z'
@@ -12577,6 +12578,272 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '403':
           description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: create_qualifying_life_event
+      description: Creates an immediately approved qualifying life event. The caller must have write access to the target member, and API access tokens cannot create events. A member not visible to the caller returns a 404 before the body is validated. Describing the event is required when event_type is 'other'.
+      summary: Create an approved member qualifying life event
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          $ref: '#/components/schemas/MemberId'
+        description: Unique member identifier (mbr_*)
+        required: true
+      tags:
+      - Members
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMemberQualifyingLifeEventRequest'
+        required: true
+      security:
+      - APIKeyAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberQualifyingLifeEventDetailResponse'
+              examples:
+                CreatedQualifyingLifeEvent:
+                  value:
+                    data:
+                      id: qle_AAAAAAAAAAAAAAAAAAAAAQ
+                      event_type: had_baby
+                      event_type_label: Having a baby
+                      other_event: null
+                      status: approved
+                      submitted_at: '2026-07-01T14:30:00Z'
+                  summary: Created Qualifying Life Event
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Invalid request.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: The caller is an access token; access tokens cannot create qualifying life events.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Resource not found.
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity - Business rule or domain invariant violated
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '401':
+          description: Unauthorized - Invalid or missing API key
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -13209,6 +13476,235 @@ paths:
                       total: 1
                       total_pages: 1
                   summary: Plans List
+          description: ''
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+        '400':
+          description: Bad Request - Invalid input or validation error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - Insufficient permissions for this resource
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found - The requested resource does not exist
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+            Retry-After:
+              description: Number of seconds to wait before retrying the request
+              schema:
+                type: integer
+                example: 60
+            RateLimit-Reason:
+              description: Reason the request was rate limited
+              schema:
+                type: string
+                enum:
+                - quota-based
+                - burst-based
+                - concurrent-limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict - Resource already exists or conflicts with current state
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error - An unexpected error occurred
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bad Gateway - External service error
+          headers:
+            X-RateLimit-Limit:
+              description: Maximum number of requests allowed within the rate limit window
+              schema:
+                type: integer
+                example: 1000
+            X-RateLimit-Remaining:
+              description: Number of requests remaining in the current rate limit window
+              schema:
+                type: integer
+                example: 999
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the rate limit window resets
+              schema:
+                type: integer
+                example: 1700000000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/qualifying-life-event-types:
+    get:
+      operationId: list_qualifying_life_event_types
+      description: Returns every qualifying life event type that can be used to create a new event, in display order with human-readable labels and display-group headings. Historical-only values (such as `new_child`) are not included.
+      summary: List qualifying life event types
+      tags:
+      - Members
+      security:
+      - APIKeyAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualifyingLifeEventTypesResponse'
+              examples:
+                QualifyingLifeEventTypes:
+                  value:
+                    data:
+                    - event_type: married
+                      label: Getting married
+                      group: Household changes
+                  summary: Qualifying Life Event Types
           description: ''
           headers:
             X-RateLimit-Limit:
@@ -14189,7 +14685,7 @@ paths:
   /v2/members:
     get:
       operationId: list_members
-      description: Retrieves a paginated list of the members in the authenticated organization's book — identity, contact details, and address. The book covers members reached through an employer in the organization's book as well as members of a group it owns. Supports free-text search (name, email, or exact member id).
+      description: Retrieves a paginated list of the members in the authenticated organization's book — identity, contact details, and address. The book covers members reached through an employer in the organization's book as well as members of a group it owns. Supports free-text search (name, email, phone number, or exact member id).
       summary: List members
       parameters:
       - in: query
@@ -14206,7 +14702,7 @@ paths:
         name: search
         schema:
           $ref: '#/components/schemas/MemberSearch'
-        description: Case-insensitive search across member name and email; exact match on member id
+        description: Case-insensitive search across member name, email, and phone number; exact match on member id (prefixed or raw uuid)
       tags:
       - Members
       security:
@@ -15501,6 +15997,43 @@ components:
       required:
       - external_reference_id
       - name
+    CreateMemberQualifyingLifeEventRequest:
+      type: object
+      properties:
+        event_type:
+          allOf:
+          - $ref: '#/components/schemas/QualifyingLifeEventType'
+          description: |-
+            The qualifying life event reason. `new_child` is a historical value and is not accepted when creating a new event.
+
+            * `lost_job_based_coverage` - lost_job_based_coverage
+            * `aged_off_parent_plan` - aged_off_parent_plan
+            * `lost_medicaid_chip_medicare` - lost_medicaid_chip_medicare
+            * `lost_decertified_individual_plan` - lost_decertified_individual_plan
+            * `married` - married
+            * `divorced` - divorced
+            * `had_baby` - had_baby
+            * `adopted_child` - adopted_child
+            * `foster_care_placement` - foster_care_placement
+            * `death_of_spouse_or_dependent` - death_of_spouse_or_dependent
+            * `court_ordered` - court_ordered
+            * `moved_to_new_coverage_area` - moved_to_new_coverage_area
+            * `moved_to_us` - moved_to_us
+            * `moved_to_or_from_school_housing` - moved_to_or_from_school_housing
+            * `moved_to_or_from_seasonal_work_housing` - moved_to_or_from_seasonal_work_housing
+            * `became_us_citizen` - became_us_citizen
+            * `left_incarceration` - left_incarceration
+            * `gained_tribal_status` - gained_tribal_status
+            * `started_or_ended_americorps_service` - started_or_ended_americorps_service
+            * `new_child` - new_child
+            * `other` - other
+        other_event:
+          type: string
+          nullable: true
+          description: Free-text description of the event; required when event_type is 'other'
+          maxLength: 128
+      required:
+      - event_type
     CreateOrganizationRequest:
       type: object
       properties:
@@ -16537,20 +17070,6 @@ components:
       - message
       - error
       - trace_id
-    EventType:
-      enum:
-      - Married
-      - Divorced
-      - New child
-      - Court ordered
-      - Other
-      type: string
-      description: |-
-        * `Married` - Married
-        * `Divorced` - Divorced
-        * `New child` - New Child
-        * `Court ordered` - Court Ordered
-        * `Other` - Other
     Gender:
       enum:
       - Male
@@ -16838,14 +17357,6 @@ components:
             $ref: '#/components/schemas/HouseholdMember'
       required:
       - data
-    IchraAffordability:
-      type: object
-      properties:
-        is_affordable:
-          type: boolean
-          description: 'True when `employee_deduction_in_cents` is at or below the IRS affordability percentage of the member''s individual income for the year this plan year started. It measures what the member pays for the plan they chose, so it is **not** a statement that the employer''s offer satisfies the ACA employer mandate: that test is benchmarked against the lowest-cost silver plan at self-only coverage, which this does not use.'
-      required:
-      - is_affordable
     IdpProvider:
       enum:
       - workos
@@ -17342,11 +17853,11 @@ components:
         issued_date:
           type: string
           format: date
-          description: Date the enrollment record was created (YYYY-MM-DD), the value Ops labels Issued on. Present on every row whatever the member answered, and distinct from `coverage_start`. It does not imply the member could answer the enrollment on that date; the window they can answer in is `enrollment_window_start`/`enrollment_window_end`.
+          description: Date the enrollment record was created (YYYY-MM-DD), the value Ops labels Issued on. Present on every row whatever the member answered, and distinct from `coverage_start`. It equals `enrollment_window_start` for a row issued once its open enrollment had already opened, and precedes it for a row issued ahead of open enrollment.
         enrollment_window_start:
           type: string
           format: date
-          description: Enrollment / open-enrollment window start date (YYYY-MM-DD)
+          description: First date the member could answer this enrollment (YYYY-MM-DD). Open enrollment's start date for a row issued before open enrollment opened, otherwise the date the row was issued -- an enrollment is never answerable before it exists, so this is never earlier than `issued_date`.
         enrollment_window_end:
           type: string
           format: date
@@ -17379,11 +17890,6 @@ components:
         is_within_enrollment_window:
           type: boolean
           description: True when today falls inside the enrollment window this member has to answer in; drives enrollment-action availability on the client.
-        ichra_affordability:
-          allOf:
-          - $ref: '#/components/schemas/IchraAffordability'
-          nullable: true
-          description: How this member's monthly share compares with the ACA affordability line for their income. Null unless the row is an ICHRA election whose plan year, premium and the member's individual income are all on file.
       required:
       - benefit_plan_year_id
       - benefit_type
@@ -17392,7 +17898,6 @@ components:
       - employer_id
       - employer_name
       - enrollment_window_start
-      - ichra_affordability
       - id
       - in_last_month_of_coverage
       - is_within_enrollment_window
@@ -17583,15 +18088,34 @@ components:
           description: Opaque qualifying life event identifier
         event_type:
           allOf:
-          - $ref: '#/components/schemas/EventType'
+          - $ref: '#/components/schemas/QualifyingLifeEventType'
           description: |-
             The member-submitted qualifying life event type
 
-            * `Married` - Married
-            * `Divorced` - Divorced
-            * `New child` - New Child
-            * `Court ordered` - Court Ordered
-            * `Other` - Other
+            * `lost_job_based_coverage` - Losing job-based health insurance
+            * `aged_off_parent_plan` - Aging off a parent's plan at age 26
+            * `lost_medicaid_chip_medicare` - Losing Medicaid, CHIP, or Medicare eligibility
+            * `lost_decertified_individual_plan` - Losing individual coverage because a plan was decertified
+            * `married` - Getting married
+            * `divorced` - Getting divorced or legally separated
+            * `had_baby` - Having a baby
+            * `adopted_child` - Adopting a child
+            * `foster_care_placement` - Foster-care placement
+            * `death_of_spouse_or_dependent` - Death of a covered spouse or dependent
+            * `court_ordered` - Court order to add a dependent
+            * `moved_to_new_coverage_area` - Moving to a new ZIP code, county, or state where different plans are available
+            * `moved_to_us` - Moving to the U.S. from another country
+            * `moved_to_or_from_school_housing` - Moving to or from school housing
+            * `moved_to_or_from_seasonal_work_housing` - Moving to or from housing for seasonal work
+            * `became_us_citizen` - Becoming a U.S. citizen
+            * `left_incarceration` - Leaving incarceration
+            * `gained_tribal_status` - Gaining status as a member of a federally recognized tribe or Alaska Native corporation
+            * `started_or_ended_americorps_service` - Starting or ending AmeriCorps service
+            * `new_child` - New child
+            * `other` - Other
+        event_type_label:
+          type: string
+          description: Human-readable label for event_type
         other_event:
           type: string
           nullable: true
@@ -17611,10 +18135,19 @@ components:
           description: When the member submitted the event
       required:
       - event_type
+      - event_type_label
       - id
       - other_event
       - status
       - submitted_at
+    MemberQualifyingLifeEventDetailResponse:
+      type: object
+      description: Response containing a single member qualifying life event detail resource.
+      properties:
+        data:
+          $ref: '#/components/schemas/MemberQualifyingLifeEvent'
+      required:
+      - data
     MemberQualifyingLifeEventListResponse:
       type: object
       description: Paginated list response containing member qualifying life event resources.
@@ -18369,6 +18902,102 @@ components:
         * `pending` - Pending
         * `approved` - Approved
         * `denied` - Denied
+    QualifyingLifeEventType:
+      enum:
+      - lost_job_based_coverage
+      - aged_off_parent_plan
+      - lost_medicaid_chip_medicare
+      - lost_decertified_individual_plan
+      - married
+      - divorced
+      - had_baby
+      - adopted_child
+      - foster_care_placement
+      - death_of_spouse_or_dependent
+      - court_ordered
+      - moved_to_new_coverage_area
+      - moved_to_us
+      - moved_to_or_from_school_housing
+      - moved_to_or_from_seasonal_work_housing
+      - became_us_citizen
+      - left_incarceration
+      - gained_tribal_status
+      - started_or_ended_americorps_service
+      - new_child
+      - other
+      type: string
+      description: |-
+        * `lost_job_based_coverage` - lost_job_based_coverage
+        * `aged_off_parent_plan` - aged_off_parent_plan
+        * `lost_medicaid_chip_medicare` - lost_medicaid_chip_medicare
+        * `lost_decertified_individual_plan` - lost_decertified_individual_plan
+        * `married` - married
+        * `divorced` - divorced
+        * `had_baby` - had_baby
+        * `adopted_child` - adopted_child
+        * `foster_care_placement` - foster_care_placement
+        * `death_of_spouse_or_dependent` - death_of_spouse_or_dependent
+        * `court_ordered` - court_ordered
+        * `moved_to_new_coverage_area` - moved_to_new_coverage_area
+        * `moved_to_us` - moved_to_us
+        * `moved_to_or_from_school_housing` - moved_to_or_from_school_housing
+        * `moved_to_or_from_seasonal_work_housing` - moved_to_or_from_seasonal_work_housing
+        * `became_us_citizen` - became_us_citizen
+        * `left_incarceration` - left_incarceration
+        * `gained_tribal_status` - gained_tribal_status
+        * `started_or_ended_americorps_service` - started_or_ended_americorps_service
+        * `new_child` - new_child
+        * `other` - other
+    QualifyingLifeEventTypeOption:
+      type: object
+      properties:
+        event_type:
+          allOf:
+          - $ref: '#/components/schemas/QualifyingLifeEventType'
+          description: |-
+            The qualifying life event type value to submit when creating an event
+
+            * `lost_job_based_coverage` - Losing job-based health insurance
+            * `aged_off_parent_plan` - Aging off a parent's plan at age 26
+            * `lost_medicaid_chip_medicare` - Losing Medicaid, CHIP, or Medicare eligibility
+            * `lost_decertified_individual_plan` - Losing individual coverage because a plan was decertified
+            * `married` - Getting married
+            * `divorced` - Getting divorced or legally separated
+            * `had_baby` - Having a baby
+            * `adopted_child` - Adopting a child
+            * `foster_care_placement` - Foster-care placement
+            * `death_of_spouse_or_dependent` - Death of a covered spouse or dependent
+            * `court_ordered` - Court order to add a dependent
+            * `moved_to_new_coverage_area` - Moving to a new ZIP code, county, or state where different plans are available
+            * `moved_to_us` - Moving to the U.S. from another country
+            * `moved_to_or_from_school_housing` - Moving to or from school housing
+            * `moved_to_or_from_seasonal_work_housing` - Moving to or from housing for seasonal work
+            * `became_us_citizen` - Becoming a U.S. citizen
+            * `left_incarceration` - Leaving incarceration
+            * `gained_tribal_status` - Gaining status as a member of a federally recognized tribe or Alaska Native corporation
+            * `started_or_ended_americorps_service` - Starting or ending AmeriCorps service
+            * `new_child` - New child
+            * `other` - Other
+        label:
+          type: string
+          description: Human-readable label for the event type
+        group:
+          type: string
+          description: Display-group heading the event type belongs under
+      required:
+      - event_type
+      - group
+      - label
+    QualifyingLifeEventTypesResponse:
+      type: object
+      description: 'Unpaginated ``{"data": [...]}`` list of qualifying life event types.'
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/QualifyingLifeEventTypeOption'
+      required:
+      - data
     ReissueEnrollment:
       type: object
       properties:
@@ -19561,7 +20190,7 @@ components:
       type: string
     MemberSearch:
       type: string
-      description: Case-insensitive search across member name and email; exact match on member id
+      description: Case-insensitive search across member name, email, and phone number; exact match on member id (prefixed or raw uuid)
     PersonaSummaryList:
       type: array
       items:
