@@ -10433,6 +10433,8 @@ paths:
                       claims_filing_url: null
                       benefit_summary_url: https://assets.vitablehealth.com/benefit-summaries/vpc.pdf
                       summary_plan_description_url: null
+                      summary_of_benefits_and_coverage_url: null
+                      carrier_policy_id: null
                       plan_name: VPC Enhanced
                       tier_name: Employee Only
                       coverage_effective_date: '2026-01-01T00:00:00Z'
@@ -15216,6 +15218,14 @@ components:
           type: string
           nullable: true
           description: Summary Plan Description (SPD) file URL; null when not on file
+        summary_of_benefits_and_coverage_url:
+          type: string
+          nullable: true
+          description: Summary of Benefits and Coverage (SBC) file URL for the member's chosen external plan (e.g. ICHRA); null when not applicable or not on file
+        carrier_policy_id:
+          type: string
+          nullable: true
+          description: Member/policy ID with the carrier for the member's chosen external plan (e.g. ICHRA); null when not applicable or not yet issued by the carrier
         plan_name:
           type: string
           description: Chosen benefit plan name
