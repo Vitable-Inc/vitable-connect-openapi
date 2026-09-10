@@ -2383,6 +2383,11 @@ paths:
       description: 'Returns the caller''s employer book — every employer with its computed columns (enrollment-rate summary, benefit-family tags, HRIS connection, benefit-lifecycle stage) merged with the employer''s flat CRM fields (legal name, EIN, contact, address, timestamps). The book is derived from the authenticated principal: one organization''s employers, or every organization''s for a caller whose reach is not a single organization. Supports search by display name, legal name, or exact EIN, employer id or contact email, benefit-family/lifecycle/HRIS filters, and page/limit pagination.'
       summary: List employers
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: query
         name: benefit_family
         schema:
@@ -2684,6 +2689,12 @@ paths:
       operationId: create_employer
       description: Creates a new employer for the authenticated organization. Requires employer name, legal name, EIN, email, and address information. Returns the created employer with its assigned ID.
       summary: Create employer
+      parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       tags:
       - Employers
       requestBody:
@@ -2985,6 +2996,11 @@ paths:
       description: Retrieves detailed information for a specific employer by ID. The employer must belong to the authenticated organization.
       summary: Get employer
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -3234,6 +3250,11 @@ paths:
       description: Updates an existing employer. All fields are optional — only provided fields are updated. PO Box addresses are rejected.
       summary: Update employer
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -3489,6 +3510,11 @@ paths:
       description: Returns the employer's employees who currently have an ACA full-time determination, with their designated (payroll) and ACA classifications, required coverage start date, and measurement/stability period windows.caller must be authorized for the employer. Responds 422 with `app_error_code` `aca_autopilot_not_entitled` when the employer's plan doesn't include ACA Autopilot, or `aca_policy_not_configured` when it does but no ACA policy is set up.
       summary: List an employer's ACA full-time employees
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: query
         name: aca_classification
         schema:
@@ -3759,6 +3785,11 @@ paths:
       description: Returns the employer's benefit plan years (all years, or one when `year` is given), each with its benefits, offered states, benefit families, and the year-level enrollment roll-up. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
       summary: List an employer's benefit plan years
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -3987,6 +4018,11 @@ paths:
       description: Returns one benefit plan year in full — its benefit details plus the per-benefit enrollment rate and SPD link — addressed by its `benefit_plan_year_id`. The caller must be authorized for the employer; an unknown or unauthorized plan year returns 404.
       summary: Get one of an employer's benefit plan years
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: benefit_plan_year_id
         schema:
@@ -4221,6 +4257,11 @@ paths:
       description: 'Returns a paginated list of every member with an enrollment in one of an employer''s plan years, any election status: what they elected, where their coverage stands, dependent count, carrier, plan, tier, and the plan''s total monthly cost. The caller must be authorized for the employer `empr_<...>`; an unknown or unauthorized employer, or an unknown plan year `plyr_<...>`, returns 404.'
       summary: List a benefit plan year's enrollments
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: benefit_plan_year_id
         schema:
@@ -4761,6 +4802,11 @@ paths:
       description: Retrieves a paginated list of employees for a specific employer. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404. Results are paginated using page and limit parameters and can be narrowed with a case-insensitive `search` (first name, last name, or email) and an `employment_status` filter (active or terminated). Each employee includes payroll deductions from the most recent statement period. When a new deduction statement is generated, previous period deductions are replaced.
       summary: List employees
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -5074,6 +5120,11 @@ paths:
       description: Returns the employer's HRIS connection — provider, status, last sync, and synced row count — or null when the employer has no integration. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
       summary: Get an employer's HRIS connection
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -5313,6 +5364,11 @@ paths:
       description: Returns a cursor-paginated page of the employer's billing invoices, newest first. Pass the `next_offset` from a previous page as `offset` to fetch the next page. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
       summary: List an employer's billing invoices
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -5584,6 +5640,11 @@ paths:
       description: Returns the time-limited PDF download link for a single invoice belonging to the employer's billing customer. `invoice_id` is the external Chargebee id (not a prefixed UUID). The caller must be authorized for the employer; an unknown or unauthorized employer or invoice returns 404.
       summary: Get an employer invoice's PDF download link
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -5823,6 +5884,11 @@ paths:
       operationId: get_employer_payroll_access_setup
       description: Return whether the employer has submitted payroll access setup.
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -6048,6 +6114,11 @@ paths:
       operationId: submit_employer_payroll_access_setup
       description: Submit the employer's payroll access setup answers.
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -6281,6 +6352,11 @@ paths:
       description: Returns a paginated list of the employer's payroll-deduction statements, newest period first, each with its period, generation date, distinct employee count, total deduction, change-file link, and deduction frequency. Statements superseded by a later correction are excluded. The caller must be authorized for the employer; an unknown or unauthorized employer returns 404.
       summary: List an employer's payroll-deduction statements
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -6559,6 +6635,11 @@ paths:
       operationId: ensure_employer_payroll_integration_email
       description: Provision and return the employer's payroll integration email.
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -6786,6 +6867,11 @@ paths:
       description: Updates configuration settings for a specific employer. The employer must belong to the authenticated organization.
       summary: Update employer settings
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: employer_id
         schema:
@@ -7030,6 +7116,12 @@ paths:
       operationId: list_employer_hris_providers
       description: Returns the distinct HRIS/payroll providers across the same book `GET /v1/employers` returns, sorted for display. Use these as the values for the employers list's `hris_provider` filter — filter on `provider`, show `provider_label`. The stored providers are free text, so they cannot be enumerated in advance.
       summary: List HRIS providers
+      parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       tags:
       - Employers
       security:
@@ -7261,6 +7353,11 @@ paths:
       description: 'Retrieves a single enrollment: the employee and employer it belongs to, the benefit product, its status, the coverage period, the employee payroll deduction and employer contribution, and the enrolled plan''s Summary of Benefits and Coverage document when one is on file. An enrollment the caller cannot reach is indistinguishable from one that does not exist.'
       summary: Get enrollment details
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: enrollment_id
         schema:
@@ -7512,6 +7609,11 @@ paths:
       description: Elects an available enrollment into one non-ICHRA benefit plan and tier. User-backed callers must provide a reason; it is optional for organization API-key callers. This endpoint may be used for administrative purposes as well as for building native enrollment experiences. Tenant mismatches return a non-disclosing 404 before the request body is validated. ICHRA enrollment is not supported by this action.
       summary: Elect an enrollment
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: enrollment_id
         schema:
@@ -7795,6 +7897,11 @@ paths:
       description: Closes the targeted enrollment and creates a new unanswered enrollment for the same member and plan year. VPC never requires a qualifying life event; other products require an accepted, member-owned event outside open enrollment. User-backed callers must provide a reason; it is optional for organization API-key callers. Tenant mismatches return a non-disclosing 404 before the request body is validated.
       summary: Reissue an enrollment
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: enrollment_id
         schema:
@@ -8067,6 +8174,11 @@ paths:
       description: Terminates enrolled coverage immediately. An accepted qualifying life event owned by the enrollment member is required unless the plan is VPC or ICHRA. User-backed callers must provide a reason; it is optional for organization API-key callers. API keys may act across the caller organization's book. Tenant mismatches return the same non-disclosing 404 before the request body is validated.
       summary: Terminate an enrollment
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: enrollment_id
         schema:
@@ -9883,6 +9995,11 @@ paths:
       description: Retrieves a member's profile by ID — identity, demographics, address, contact details, tobacco status, and profile status. Access is scoped to the authenticated principal; a member not visible to the caller returns a 404.
       summary: Get member
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -10136,6 +10253,11 @@ paths:
       description: Partially updates a member profile and returns the full updated profile. Omitted fields are preserved. Null clears middle_name, suffix, sex_at_birth, gender, and tobacco_status; other fields cannot be null. Access is limited to organization callers with write access to the member. Unknown, unauthorized, and out-of-scope members return the same 404.
       summary: Update member
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -10405,6 +10527,11 @@ paths:
       description: Lists a Member's active benefit coverage across all employers, will include benefits where the Member is either the policy holder or the dependent. Organization callers see only coverage from employers in its book. A Member not visible to the caller returns a 404.
       summary: List member benefit coverage
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -10666,6 +10793,11 @@ paths:
       description: Lists a member's active legal dependents — name, relationship, date of birth, age, and sex at birth. Access is scoped to the authenticated principal; a member not visible to the caller returns a 404.
       summary: List member dependents
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -10903,6 +11035,11 @@ paths:
       description: Lists a member's employment across every employer — the same employee record shape as the employer's employees list, plus the employer name. For an organization caller the rows are scoped to companies in that organization's book; a member (self/household) or Vitable Admin sees all employments. A member not visible to the caller returns a 404.
       summary: List member employments
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -11145,6 +11282,11 @@ paths:
       description: Lists enrollment, termination, and reissue audits for enrollments visible to the caller. Entries are ordered newest first with stable paging. Organization callers see only enrollments in their book. A member not visible to the caller returns a 404 before pagination is validated.
       summary: List member enrollment history log
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: query
         name: limit
         schema:
@@ -11407,6 +11549,11 @@ paths:
       description: 'Lists a member''s benefit enrollments across every employer — benefit type and product, employer, carrier, plan, tier, employee deduction, employer contribution and total premium, the individual enrollment coverage boundary (`coverage_end`), the separate pre-effective cancellation boundary (`cancelled_date`), and the distinct benefit plan-year boundary (`plan_year_coverage_end`) used to determine whether the plan year itself has ended, the date the enrollment record was created (`issued_date`, the value Ops labels Issued on, reported for every row whatever the member answered), the window the member could answer in -- which never opens before the enrollment was issued, so a row issued mid-open-enrollment starts its window on its issue date -- whether a qualifying life event would currently be required for reissue under the product/open-enrollment rule, enrollment/open-enrollment window, and two statuses: `election_status` (what the member answered) and `policy_status` (what became of their coverage, null unless they enrolled). Every row includes a stable enrollment ID and the exact employer and benefit plan-year IDs used to fetch that row''s plan-year detail. The full list is returned across all states so the client derives active plans (effective and upcoming) and the enrollment history from those per-row statuses. For an organization caller the rows are scoped to companies in that organization''s book; a member (self/household) or Vitable Admin sees all enrollments. A member not visible to the caller returns a 404.'
       summary: List member enrollments
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -11712,6 +11859,11 @@ paths:
       description: Lists a member's household as a per-participant table — the account holder plus each active household member, with name, relationship, member type, date of birth, and household-admin flag. Access is scoped to the authenticated principal; a member not visible to the caller (or with no household) returns a 404.
       summary: Get member household
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -11956,6 +12108,11 @@ paths:
       description: Lists a member's ICHRA payment accounts — one per employment that is enrolled in an automated-banking ICHRA benefit. Each row carries the deposit account number and routing number, the current balance, the most recent credit and its date, and whether a debit card has been provisioned. Card credentials are never included; they are revealed only through a card session. A member not visible to the caller returns a 404.
       summary: List member ICHRA payment accounts
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -12198,6 +12355,11 @@ paths:
       description: Mints a single-use, short-lived session that lets the member reveal their debit card number, expiry, and security code inside a provider-hosted iframe. Load `embed_url` as the iframe source; the card is never returned to the caller or to the hosting page. Sessions are consumed on reveal and rate limited per member and per organization. Returns 404 when the member or account is not visible to the caller, 409 when no card has been provisioned, and 429 when the provider rate limit is exceeded.
       summary: Create member card reveal session
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -12430,6 +12592,11 @@ paths:
       description: Lists a member's benefit ID cards — card type (medical, dental, vision, or rx), employer, plan, provider network, claims payer, carrier contact details, and the disclaimers printed on the card. Medical, dental and vision cards come from the member's active digital benefit cards; the rx card from the member's Ventegra pharmacy benefit (omitted when the member has no free-medication coverage), which carries no plan, network, or carrier details. Access is scoped to the authenticated principal, and an organization caller sees only cards from employers in its book; a member not visible to the caller returns a 404.
       summary: List member ID cards
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -12710,6 +12877,11 @@ paths:
       description: Lists a member's qualifying life events, including events already used for another enrollment. Returns all statuses by default; pass the status query param to filter to one (e.g. approved). Events are ordered newest submission first with stable paging. Custom text is present only when submitted and is otherwise null. A member not visible to the caller returns a 404. API keys and unbound access tokens have organization-wide access. Employer-bound tokens require employment at the bound employer, and employee-bound tokens require the exact employee-member relationship. Organization or scope mismatches return a 404 before pagination is validated.
       summary: List member qualifying life events
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: query
         name: limit
         schema:
@@ -12968,6 +13140,11 @@ paths:
       description: Creates an immediately approved qualifying life event. The caller must have write access to the target member, and API access tokens cannot create events. A member not visible to the caller returns a 404 before the body is validated. Describing the event is required when event_type is 'other'.
       summary: Create an approved member qualifying life event
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: path
         name: member_id
         schema:
@@ -13460,7 +13637,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
     post:
       operationId: create_organization
-      description: 'Onboards the authenticated user''s partner Organization: creates the local Organization + the creator''s admin membership atomically, then mirrors it to WorkOS (creates the WorkOS org and binds the creator as admin). 409 `organization_already_exists` when the user already has an organization (v0: one organization per user).'
+      description: 'Onboards the authenticated user''s partner Organization: creates the local Organization + the creator''s admin membership atomically, then mirrors it to WorkOS (creates the WorkOS org and binds the creator as admin). A user may hold several organizations and selects which one a request acts as with the `X-Vitable-Organization` header. The founder''s email domain is claimed only when no other organization holds it, so a taken domain is left with its owner rather than rejected.'
       summary: Create organization
       tags:
       - Organizations
@@ -13540,7 +13717,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          description: User already has an organization — `organization_already_exists`.
+          description: Another organization claimed the founder's email domain concurrently — `organization_already_exists`. Retry.
           headers:
             X-RateLimit-Limit:
               description: Maximum number of requests allowed within the rate limit window
@@ -13951,6 +14128,12 @@ paths:
       operationId: list_qualifying_life_event_types
       description: Returns every qualifying life event type that can be used to create a new event, in display order with human-readable labels and display-group headings. Historical-only values (such as `new_child`) are not included.
       summary: List qualifying life event types
+      parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       tags:
       - Members
       security:
@@ -14952,6 +15135,11 @@ paths:
       description: Retrieves a paginated list of the members in the authenticated organization's book — identity, contact details, and address. The book covers members reached through an employer in the organization's book as well as members of a group it owns. Supports free-text search (name, email, phone number, or exact member id).
       summary: List members
       parameters:
+      - in: header
+        name: X-Vitable-Organization
+        schema:
+          $ref: '#/components/schemas/XVitableOrganization'
+        description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
       - in: query
         name: limit
         schema:
@@ -20363,6 +20551,9 @@ components:
       default: 1
       example: 1
       description: 'Page number (default: 1)'
+    XVitableOrganization:
+      type: string
+      description: Organization to act as for this request (e.g. `org_SGVsbG8gV29ybGQ`). Optional when your credentials reach a single organization. Required when they reach several — omitting it then returns 400 `organization_required`. A malformed value returns 400 `invalid_organization_header`, and naming an organization you do not have access to returns 403 `organization_access_denied`.
     BenefitFamilyParam:
       type: array
       items:
